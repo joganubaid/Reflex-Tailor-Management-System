@@ -7,10 +7,12 @@ from app.pages.dashboard import dashboard_page
 from app.pages.workers import workers_page
 from app.pages.reports import reports_page
 from app.pages.measurements import measurements_page
+from app.pages.payments import payments_page
 from app.state import CustomerState, OrderState, MaterialState, BillingState
 from app.states.dashboard_state import DashboardState
 from app.states.worker_state import WorkerState
 from app.states.measurement_state import MeasurementState
+from app.states.payment_state import PaymentState
 from app.components.sidebar import sidebar
 
 
@@ -48,6 +50,9 @@ app.add_page(
 )
 app.add_page(workers_page, route="/workers", on_load=WorkerState.get_workers)
 app.add_page(reports_page, route="/reports")
+app.add_page(
+    payments_page, route="/payments", on_load=PaymentState.get_all_installments
+)
 app.add_page(
     measurements_page, route="/measurements", on_load=MeasurementState.get_measurements
 )

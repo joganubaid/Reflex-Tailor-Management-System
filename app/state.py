@@ -131,6 +131,7 @@ ORDER BY o.order_date DESC""")
     async def add_order(self, form_data: dict):
         """Adds a new order to the database and sends a confirmation SMS."""
         from app.utils.sms import send_order_confirmation
+        from app.utils.whatsapp import send_whatsapp_order_confirmation
 
         customer_id = int(form_data["customer_id"])
         total_amount = float(form_data.get("total_amount", 0))
@@ -160,25 +161,42 @@ ORDER BY o.order_date DESC""")
             (c for c in self.available_customers if c["customer_id"] == customer_id),
             None,
         )
-        sms_sent = False
         if customer:
-            sms_sent = send_order_confirmation(
-                customer_phone=customer["phone_number"],
-                customer_name=customer["name"],
-                order_id=new_order_id,
-                delivery_date=str(delivery_date) if delivery_date else "TBA",
-                total_amount=total_amount,
-            )
+            notification_preference = customer.get("preferred_notification", "sms")
+            if notification_preference in ["sms", "both"]:
+                sms_sent = send_order_confirmation(
+                    customer_phone=customer["phone_number"],
+                    customer_name=customer["name"],
+                    order_id=new_order_id,
+                    delivery_date=str(delivery_date) if delivery_date else "TBA",
+                    total_amount=total_amount,
+                )
+                if not sms_sent:
+                    yield rx.toast.error("Failed to send order confirmation SMS.")
+            if customer.get("whatsapp_opt_in") and notification_preference in [
+                "whatsapp",
+                "both",
+            ]:
+                wa_sent = send_whatsapp_order_confirmation(
+                    customer_phone=customer["phone_number"],
+                    customer_name=customer["name"],
+                    order_id=new_order_id,
+                    delivery_date=str(delivery_date) if delivery_date else "TBA",
+                    total_amount=total_amount,
+                )
+                if not wa_sent:
+                    yield rx.toast.error(
+                        "Failed to send order confirmation via WhatsApp."
+                    )
         async with self:
             self.show_order_form = False
         yield rx.toast.success("Order added successfully!")
-        if customer and (not sms_sent):
-            yield rx.toast.error("Failed to send order confirmation SMS.")
         yield OrderState.get_orders
 
     @rx.event(background=True)
     async def update_order_status(self, order_id: int, new_status: str):
         from app.utils.sms import send_order_ready_notification
+        from app.utils.whatsapp import send_whatsapp_order_ready
 
         async with self, rx.asession() as session:
             await session.execute(
@@ -191,25 +209,42 @@ ORDER BY o.order_date DESC""")
         if new_status.lower() == "ready":
             async with rx.asession() as session:
                 result = await session.execute(
-                    text("""SELECT c.name, c.phone_number 
+                    text("""SELECT c.name, c.phone_number, c.whatsapp_opt_in, c.preferred_notification 
                              FROM customers c JOIN orders o ON c.customer_id = o.customer_id 
                              WHERE o.order_id = :order_id"""),
                     {"order_id": order_id},
                 )
                 customer_info = result.mappings().first()
             if customer_info:
-                sms_sent = send_order_ready_notification(
-                    customer_phone=customer_info["phone_number"],
-                    customer_name=customer_info["name"],
-                    order_id=order_id,
+                notification_preference = customer_info.get(
+                    "preferred_notification", "sms"
                 )
-                if not sms_sent:
-                    yield rx.toast.error(
-                        f"Failed to send 'order ready' SMS for order #{order_id}."
+                if notification_preference in ["sms", "both"]:
+                    sms_sent = send_order_ready_notification(
+                        customer_phone=customer_info["phone_number"],
+                        customer_name=customer_info["name"],
+                        order_id=order_id,
                     )
+                    if not sms_sent:
+                        yield rx.toast.error(
+                            f"Failed to send 'order ready' SMS for order #{order_id}."
+                        )
+                if customer_info.get("whatsapp_opt_in") and notification_preference in [
+                    "whatsapp",
+                    "both",
+                ]:
+                    wa_sent = send_whatsapp_order_ready(
+                        customer_phone=customer_info["phone_number"],
+                        customer_name=customer_info["name"],
+                        order_id=order_id,
+                    )
+                    if not wa_sent:
+                        yield rx.toast.error(
+                            f"Failed to send 'order ready' WhatsApp for order #{order_id}."
+                        )
             else:
                 yield rx.toast.error(
-                    f"Could not find customer details for order #{order_id} to send SMS."
+                    f"Could not find customer details for order #{order_id} to send notification."
                 )
 
 
@@ -226,6 +261,8 @@ class CustomerState(BaseState):
     email: str = ""
     address: str = ""
     notes: str = ""
+    whatsapp_opt_in: bool = False
+    preferred_notification: str = "sms"
 
     @rx.event(background=True)
     async def get_customers(self):
@@ -257,7 +294,7 @@ ORDER BY c.name""")
         async with rx.asession() as session:
             await session.execute(
                 text(
-                    "INSERT INTO customers (name, phone_number, email, address, notes, registration_date) VALUES (:name, :phone_number, :email, :address, :notes, :registration_date)"
+                    "INSERT INTO customers (name, phone_number, email, address, notes, registration_date, whatsapp_opt_in, preferred_notification) VALUES (:name, :phone_number, :email, :address, :notes, :registration_date, :whatsapp_opt_in, :preferred_notification)"
                 ),
                 {
                     "name": form_data["name"],
@@ -266,6 +303,10 @@ ORDER BY c.name""")
                     "address": form_data.get("address", ""),
                     "notes": form_data.get("notes", ""),
                     "registration_date": datetime.date.today(),
+                    "whatsapp_opt_in": form_data.get("whatsapp_opt_in") == "on",
+                    "preferred_notification": form_data.get(
+                        "preferred_notification", "sms"
+                    ),
                 },
             )
             await session.commit()
@@ -282,7 +323,7 @@ ORDER BY c.name""")
         async with rx.asession() as session:
             await session.execute(
                 text(
-                    "UPDATE customers SET name = :name, phone_number = :phone_number, email = :email, address = :address, notes = :notes WHERE customer_id = :customer_id"
+                    "UPDATE customers SET name = :name, phone_number = :phone_number, email = :email, address = :address, notes = :notes, whatsapp_opt_in = :whatsapp_opt_in, preferred_notification = :preferred_notification WHERE customer_id = :customer_id"
                 ),
                 {
                     "name": form_data["name"],
@@ -290,6 +331,10 @@ ORDER BY c.name""")
                     "email": form_data.get("email", ""),
                     "address": form_data.get("address", ""),
                     "notes": form_data.get("notes", ""),
+                    "whatsapp_opt_in": form_data.get("whatsapp_opt_in") == "on",
+                    "preferred_notification": form_data.get(
+                        "preferred_notification", "sms"
+                    ),
                     "customer_id": self.editing_customer_id,
                 },
             )
@@ -321,6 +366,8 @@ ORDER BY c.name""")
         self.email = customer["email"] or ""
         self.address = customer["address"] or ""
         self.notes = customer["notes"] or ""
+        self.whatsapp_opt_in = customer.get("whatsapp_opt_in", False)
+        self.preferred_notification = customer.get("preferred_notification", "sms")
         self.show_form = True
 
     def _reset_form_fields(self):
@@ -330,6 +377,8 @@ ORDER BY c.name""")
         self.address = ""
         self.notes = ""
         self.editing_customer_id = None
+        self.whatsapp_opt_in = False
+        self.preferred_notification = "sms"
 
     @rx.event
     def show_delete_confirmation(self, customer: Customer):

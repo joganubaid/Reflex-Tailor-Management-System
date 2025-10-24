@@ -25,6 +25,7 @@ def sidebar() -> rx.Component:
         {"text": "Measurements", "href": "/measurements", "icon": "ruler"},
         {"text": "Inventory", "href": "/inventory", "icon": "package"},
         {"text": "Billing", "href": "/billing", "icon": "file-text"},
+        {"text": "Payments", "href": "/payments", "icon": "indian-rupee"},
         {"text": "Reports", "href": "/reports", "icon": "bar-chart-2"},
         {"text": "Workers", "href": "/workers", "icon": "contact"},
     ]

@@ -78,7 +78,37 @@ def customer_form() -> rx.Component:
                         placeholder="Any special notes about the customer",
                         class_name="w-full p-3 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500",
                     ),
-                    class_name="mb-6",
+                    class_name="mb-4",
+                ),
+                rx.el.div(
+                    rx.el.div(
+                        rx.el.label(
+                            "WhatsApp Opt-in",
+                            class_name="flex items-center gap-2 text-sm font-semibold text-gray-700",
+                        ),
+                        rx.el.input(
+                            type="checkbox",
+                            name="whatsapp_opt_in",
+                            checked=CustomerState.whatsapp_opt_in,
+                            class_name="form-checkbox h-5 w-5 text-purple-600 border-gray-300 rounded focus:ring-purple-500",
+                        ),
+                    ),
+                    rx.el.div(
+                        rx.el.label(
+                            "Notification Preference",
+                            class_name="block text-sm font-semibold text-gray-700 mb-2",
+                        ),
+                        rx.el.select(
+                            rx.el.option("SMS", value="sms"),
+                            rx.el.option("WhatsApp", value="whatsapp"),
+                            rx.el.option("Both", value="both"),
+                            name="preferred_notification",
+                            value=CustomerState.preferred_notification,
+                            on_change=CustomerState.set_preferred_notification,
+                            class_name="w-full p-3 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500",
+                        ),
+                    ),
+                    class_name="grid grid-cols-2 gap-4 mb-6",
                 ),
                 rx.el.div(
                     rx.dialog.close(

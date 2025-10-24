@@ -11,6 +11,8 @@ class Customer(TypedDict):
     registration_date: str
     total_orders: int
     notes: str | None
+    whatsapp_opt_in: bool
+    preferred_notification: str
 
 
 class Measurement(TypedDict):
@@ -70,6 +72,26 @@ class OrderMaterial(TypedDict):
     cost: float
 
 
+class PaymentInstallment(TypedDict):
+    installment_id: int
+    order_id: int
+    installment_number: int
+    amount: float
+    due_date: str
+    paid_date: str | None
+    status: str
+    payment_method: str | None
+    notes: str | None
+
+
+class PaymentReminder(TypedDict):
+    reminder_id: int
+    installment_id: int
+    reminder_date: str
+    sent_date: str | None
+    status: str
+
+
 class Transaction(TypedDict):
     transaction_id: int
     order_id: int
@@ -105,3 +127,17 @@ class Invoice(TypedDict):
     total_amount: float
     payment_status: str
     pdf_path: str | None
+
+
+class PaymentInstallment(TypedDict):
+    installment_id: int
+    order_id: int
+    customer_name: str
+    customer_phone: str
+    installment_number: int
+    amount: float
+    due_date: str
+    paid_date: str | None
+    status: str
+    payment_method: str | None
+    notes: str | None
