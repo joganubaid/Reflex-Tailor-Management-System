@@ -57,6 +57,9 @@ class Order(TypedDict):
     balance_payment: float
     special_instructions: str | None
     assigned_worker: int | None
+    labor_cost: float | None
+    material_cost: float | None
+    profit: float | None
 
 
 class OrderWithCustomerName(Order):
