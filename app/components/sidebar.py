@@ -29,6 +29,11 @@ def sidebar() -> rx.Component:
         {"text": "Profit Analysis", "href": "/profit-analysis", "icon": "line-chart"},
         {"text": "Reports", "href": "/reports", "icon": "bar-chart-2"},
         {"text": "Workers", "href": "/workers", "icon": "contact"},
+        {"text": "Suppliers", "href": "/suppliers", "icon": "truck"},
+        {"text": "Purchase Orders", "href": "/purchase-orders", "icon": "file-stack"},
+        {"text": "Loyalty Program", "href": "/loyalty", "icon": "gem"},
+        {"text": "Coupons", "href": "/coupons", "icon": "ticket"},
+        {"text": "Referrals", "href": "/referrals", "icon": "link-2"},
     ]
     current_path = rx.State.router.page.path
     return rx.el.aside(

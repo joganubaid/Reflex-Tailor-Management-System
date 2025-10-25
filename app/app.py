@@ -15,6 +15,16 @@ from app.states.worker_state import WorkerState
 from app.states.measurement_state import MeasurementState
 from app.states.payment_state import PaymentState
 from app.states.profit_state import ProfitAnalysisState
+from app.states.supplier_state import SupplierState
+from app.states.purchase_order_state import PurchaseOrderState
+from app.states.loyalty_state import LoyaltyState
+from app.states.coupon_state import CouponState
+from app.states.referral_state import ReferralState
+from app.pages.suppliers import suppliers_page
+from app.pages.purchase_orders import purchase_orders_page
+from app.pages.loyalty import loyalty_page
+from app.pages.coupons import coupons_page
+from app.pages.referrals import referrals_page
 from app.components.sidebar import sidebar
 
 
@@ -63,3 +73,15 @@ app.add_page(
     route="/profit-analysis",
     on_load=ProfitAnalysisState.get_profit_analysis_data,
 )
+app.add_page(suppliers_page, route="/suppliers", on_load=SupplierState.get_suppliers)
+app.add_page(
+    purchase_orders_page,
+    route="/purchase-orders",
+    on_load=[
+        PurchaseOrderState.get_purchase_orders,
+        PurchaseOrderState.check_low_stock_materials,
+    ],
+)
+app.add_page(loyalty_page, route="/loyalty", on_load=LoyaltyState.get_loyalty_data)
+app.add_page(coupons_page, route="/coupons", on_load=CouponState.get_coupons)
+app.add_page(referrals_page, route="/referrals", on_load=ReferralState.get_referrals)

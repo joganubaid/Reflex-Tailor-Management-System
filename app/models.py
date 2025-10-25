@@ -42,6 +42,7 @@ class Material(TypedDict):
     supplier_name: str | None
     supplier_contact: str | None
     last_purchase_date: str | None
+    batch_number: str | None
 
 
 class Order(TypedDict):
@@ -130,6 +131,26 @@ class Invoice(TypedDict):
     total_amount: float
     payment_status: str
     pdf_path: str | None
+
+
+class Supplier(TypedDict):
+    supplier_id: int
+    name: str
+    contact: str
+    email: str | None
+    address: str | None
+    rating: float | None
+    notes: str | None
+    registration_date: str
+    materials_count: int
+
+
+class MaterialSupplier(TypedDict):
+    id: int
+    material_id: int
+    supplier_id: int
+    price: float
+    is_preferred: bool
 
 
 class PaymentInstallment(TypedDict):
