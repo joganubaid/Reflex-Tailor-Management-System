@@ -108,6 +108,22 @@ class Photo(TypedDict):
     approval_date: str | None
 
 
+class Photo(TypedDict):
+    photo_id: int
+    photo_type: str
+    reference_id: int
+    file_name: str
+    file_path: str
+    storage_type: str
+    file_size: int
+    mime_type: str
+    upload_date: str
+    uploaded_by: str | None
+    caption: str | None
+    is_approved: bool
+    approval_date: str | None
+
+
 class PaymentReminder(TypedDict):
     reminder_id: int
     installment_id: int
