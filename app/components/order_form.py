@@ -223,6 +223,18 @@ def order_form() -> rx.Component:
                     ),
                     class_name="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4",
                 ),
+                rx.el.div(
+                    _form_label("Priority"),
+                    _form_select(
+                        rx.el.option("Standard", value="standard"),
+                        rx.el.option("High", value="high"),
+                        rx.el.option("Urgent", value="urgent"),
+                        name="priority",
+                        value=OrderState.order_priority,
+                        on_change=OrderState.set_order_priority,
+                    ),
+                    class_name="mb-4",
+                ),
                 measurement_fields(),
                 rx.el.div(
                     _form_label("Special Instructions (Optional)"),

@@ -12,9 +12,32 @@ class PaymentState(rx.State):
     is_editing: bool = False
     editing_installment_id: int | None = None
     selected_order_id: str = ""
-    installment_amount: float = 0.0
+    installment_amount: str = ""
     due_date: str = ""
     notes: str = ""
+    search_query: str = ""
+
+    @rx.var
+    def filtered_installments(self) -> list[PaymentInstallment]:
+        today = datetime.date.today()
+        processed_installments = []
+        for inst in self.installments:
+            inst_copy = inst.copy()
+            due_date = datetime.datetime.strptime(
+                str(inst_copy["due_date"]).split(" ")[0], "%Y-%m-%d"
+            ).date()
+            if inst_copy["status"] == "pending" and due_date < today:
+                inst_copy["status"] = "overdue"
+            processed_installments.append(inst_copy)
+        if not self.search_query:
+            return processed_installments
+        lower_query = self.search_query.lower()
+        return [
+            i
+            for i in processed_installments
+            if lower_query in i["customer_name"].lower()
+            or str(i["order_id"]) == lower_query
+        ]
 
     @rx.event(background=True)
     async def get_all_installments(self):
@@ -45,7 +68,7 @@ class PaymentState(rx.State):
         self.is_editing = False
         self.editing_installment_id = None
         self.selected_order_id = ""
-        self.installment_amount = 0.0
+        self.installment_amount = ""
         self.due_date = ""
         self.notes = ""
 
@@ -53,6 +76,8 @@ class PaymentState(rx.State):
     def toggle_installment_form(self):
         self.show_installment_form = not self.show_installment_form
         self._reset_form()
+        if self.show_installment_form:
+            return PaymentState.get_all_installments
 
     @rx.event(background=True)
     async def handle_form_submit(self, form_data: dict):

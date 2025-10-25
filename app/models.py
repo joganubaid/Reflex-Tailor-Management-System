@@ -65,6 +65,8 @@ class Order(TypedDict):
     is_bulk_order: bool
     bulk_order_details: str | None
     order_template_id: int | None
+    is_duplicate: bool | None
+    original_order_id: int | None
 
 
 class OrderWithCustomerName(Order):
@@ -90,22 +92,6 @@ class PaymentInstallment(TypedDict):
     status: str
     payment_method: str | None
     notes: str | None
-
-
-class Photo(TypedDict):
-    photo_id: int
-    photo_type: str
-    reference_id: int
-    file_name: str
-    file_path: str
-    storage_type: str
-    file_size: int
-    mime_type: str
-    upload_date: str
-    uploaded_by: str | None
-    caption: str | None
-    is_approved: bool
-    approval_date: str | None
 
 
 class Photo(TypedDict):
@@ -334,3 +320,18 @@ class AutomationWorkflow(TypedDict):
     trigger_event: str
     is_active: bool
     execution_count: int
+
+
+class WorkerTaskWithDetails(TypedDict):
+    task_id: int
+    worker_id: int
+    order_id: int
+    task_type: str
+    assigned_date: str
+    due_date: str | None
+    completed_date: str | None
+    status: str
+    notes: str | None
+    worker_name: str
+    customer_name: str
+    cloth_type: str

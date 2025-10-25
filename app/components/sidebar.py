@@ -34,6 +34,7 @@ def sidebar() -> rx.Component:
         {"text": "Loyalty Program", "href": "/loyalty", "icon": "gem"},
         {"text": "Coupons", "href": "/coupons", "icon": "ticket"},
         {"text": "Referrals", "href": "/referrals", "icon": "link-2"},
+        {"text": "Productivity", "href": "/productivity", "icon": "clipboard-check"},
     ]
     current_path = rx.State.router.page.path
     return rx.el.aside(

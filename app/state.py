@@ -21,6 +21,8 @@ class BaseState(rx.State):
 
 class OrderState(BaseState):
     orders: list[OrderWithCustomerName] = []
+    search_query: str = ""
+    priority_filter: str = "all"
     show_order_form: bool = False
     is_editing_order: bool = False
     editing_order_id: int | None = None
@@ -45,11 +47,27 @@ class OrderState(BaseState):
     pant_length: float | None = None
     inseam: float | None = None
     neck: float | None = None
+    order_priority: str = "standard"
     show_template_manager: bool = False
 
     @rx.var
     def order_balance_payment(self) -> float:
         return self.order_total_amount - self.order_advance_payment
+
+    @rx.var
+    def filtered_orders(self) -> list[OrderWithCustomerName]:
+        orders = self.orders
+        if self.priority_filter != "all":
+            orders = [o for o in orders if o["priority"] == self.priority_filter]
+        if self.search_query:
+            lower_query = self.search_query.lower()
+            orders = [
+                o
+                for o in orders
+                if lower_query in o["customer_name"].lower()
+                or str(o["order_id"]) == lower_query
+            ]
+        return orders
 
     @rx.event
     def open_template_manager(self):
@@ -142,10 +160,11 @@ ORDER BY o.order_date DESC""")
         total_amount = float(form_data.get("total_amount", 0))
         advance_payment = float(form_data.get("advance_payment", 0))
         delivery_date = form_data.get("delivery_date") or None
+        priority = self.order_priority
         async with rx.asession() as session:
             result = await session.execute(
-                text("""INSERT INTO orders (customer_id, order_date, delivery_date, status, cloth_type, quantity, total_amount, advance_payment, balance_payment, special_instructions)
-                     VALUES (:customer_id, :order_date, :delivery_date, :status, :cloth_type, :quantity, :total_amount, :advance_payment, :balance_payment, :special_instructions)
+                text("""INSERT INTO orders (customer_id, order_date, delivery_date, status, cloth_type, quantity, total_amount, advance_payment, balance_payment, special_instructions, priority)
+                     VALUES (:customer_id, :order_date, :delivery_date, :status, :cloth_type, :quantity, :total_amount, :advance_payment, :balance_payment, :special_instructions, :priority)
                      RETURNING order_id"""),
                 {
                     "customer_id": customer_id,
@@ -158,6 +177,7 @@ ORDER BY o.order_date DESC""")
                     "advance_payment": advance_payment,
                     "balance_payment": total_amount - advance_payment,
                     "special_instructions": form_data.get("special_instructions"),
+                    "priority": priority,
                 },
             )
             new_order_id = result.scalar_one()
@@ -251,6 +271,37 @@ ORDER BY o.order_date DESC""")
                 yield rx.toast.error(
                     f"Could not find customer details for order #{order_id} to send notification."
                 )
+
+    @rx.event(background=True)
+    async def duplicate_order(self, order_id: int):
+        async with rx.asession() as session:
+            result = await session.execute(
+                text("SELECT * FROM orders WHERE order_id = :order_id"),
+                {"order_id": order_id},
+            )
+            original_order = result.mappings().first()
+            if not original_order:
+                async with self:
+                    yield rx.toast.error("Original order not found.")
+                return
+            new_order_data = dict(original_order)
+            new_order_data.pop("order_id", None)
+            new_order_data["order_date"] = datetime.date.today()
+            new_order_data["delivery_date"] = None
+            new_order_data["status"] = "pending"
+            new_order_data["is_duplicate"] = True
+            new_order_data["original_order_id"] = order_id
+            insert_query = text("""INSERT INTO orders (customer_id, order_date, delivery_date, status, cloth_type, quantity, total_amount, advance_payment, balance_payment, special_instructions, priority, is_duplicate, original_order_id)
+                     VALUES (:customer_id, :order_date, :delivery_date, :status, :cloth_type, :quantity, :total_amount, :advance_payment, :balance_payment, :special_instructions, :priority, :is_duplicate, :original_order_id)
+                     RETURNING order_id""")
+            new_result = await session.execute(insert_query, new_order_data)
+            new_order_id = new_result.scalar_one()
+            await session.commit()
+        async with self:
+            yield rx.toast.success(
+                f"Order #{order_id} duplicated as new order #{new_order_id}."
+            )
+            yield OrderState.get_orders
 
 
 class CustomerState(BaseState):

@@ -36,7 +36,7 @@ def installment_row(installment: rx.Var[dict]) -> rx.Component:
             class_name="px-6 py-4 text-center",
         ),
         rx.el.td(
-            f"₹{installment['amount'].to_string()}",
+            f"’{installment['amount'].to_string()}",
             class_name="px-6 py-4 font-semibold",
         ),
         rx.el.td(
@@ -106,6 +106,7 @@ def payments_page() -> rx.Component:
                     rx.el.input(
                         placeholder="Search by customer or order ID...",
                         class_name="w-full md:w-80 pl-10 pr-4 py-2 border rounded-lg focus:ring-purple-500 focus:border-purple-500",
+                        on_change=PaymentState.set_search_query,
                     ),
                     class_name="relative",
                 ),
@@ -157,12 +158,14 @@ def payments_page() -> rx.Component:
                             )
                         ),
                         rx.el.tbody(
-                            rx.foreach(PaymentState.installments, installment_row)
+                            rx.foreach(
+                                PaymentState.filtered_installments, installment_row
+                            )
                         ),
                         class_name="min-w-full divide-y divide-gray-200",
                     ),
                     rx.cond(
-                        PaymentState.installments.length() == 0,
+                        PaymentState.filtered_installments.length() == 0,
                         rx.el.div(
                             rx.icon(
                                 "indian-rupee",

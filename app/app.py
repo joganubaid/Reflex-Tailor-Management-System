@@ -6,6 +6,7 @@ from app.pages.billing import billing_page
 from app.pages.dashboard import dashboard_page
 from app.pages.workers import workers_page
 from app.pages.reports import reports_page
+from app.states.report_state import ReportState
 from app.pages.measurements import measurements_page
 from app.pages.payments import payments_page
 from app.pages.profit_analysis import profit_analysis_page
@@ -21,11 +22,13 @@ from app.states.loyalty_state import LoyaltyState
 from app.states.coupon_state import CouponState
 from app.states.referral_state import ReferralState
 from app.states.photo_state import PhotoState
+from app.states.task_state import TaskState
 from app.pages.suppliers import suppliers_page
 from app.pages.purchase_orders import purchase_orders_page
 from app.pages.loyalty import loyalty_page
 from app.pages.coupons import coupons_page
 from app.pages.referrals import referrals_page
+from app.pages.productivity import productivity_page
 from app.components.sidebar import sidebar
 
 
@@ -62,10 +65,7 @@ app.add_page(
     billing_page, route="/billing", on_load=BillingState.get_orders_for_billing
 )
 app.add_page(workers_page, route="/workers", on_load=WorkerState.get_workers)
-app.add_page(reports_page, route="/reports")
-app.add_page(
-    payments_page, route="/payments", on_load=PaymentState.get_all_installments
-)
+app.add_page(reports_page, route="/reports", on_load=ReportState.load_all_reports)
 app.add_page(
     measurements_page, route="/measurements", on_load=MeasurementState.get_measurements
 )
@@ -86,3 +86,7 @@ app.add_page(
 app.add_page(loyalty_page, route="/loyalty", on_load=LoyaltyState.get_loyalty_data)
 app.add_page(coupons_page, route="/coupons", on_load=CouponState.get_coupons)
 app.add_page(referrals_page, route="/referrals", on_load=ReferralState.get_referrals)
+app.add_page(productivity_page, route="/productivity", on_load=TaskState.get_tasks)
+app.add_page(
+    payments_page, route="/payments", on_load=PaymentState.get_all_installments
+)

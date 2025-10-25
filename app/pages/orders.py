@@ -1,6 +1,9 @@
 import reflex as rx
 from app.state import OrderState
 from app.states.photo_state import PhotoState
+import reflex as rx
+from app.state import OrderState
+from app.states.photo_state import PhotoState
 from app.components.sidebar import sidebar
 from app.components.order_form import order_form
 from app.components.photo_uploader import photo_upload_dialog
@@ -12,6 +15,11 @@ STATUS_COLORS = {
     "finishing": "bg-blue-100 text-blue-800",
     "ready": "bg-green-100 text-green-800",
     "delivered": "bg-gray-100 text-gray-800",
+}
+PRIORITY_COLORS = {
+    "urgent": "border-red-500 bg-red-50",
+    "high": "border-orange-500 bg-orange-50",
+    "standard": "border-transparent",
 }
 
 
@@ -33,6 +41,12 @@ def status_badge(status: rx.Var[str]) -> rx.Component:
 
 
 def order_row(order: rx.Var[dict]) -> rx.Component:
+    row_class = rx.match(
+        order["priority"].to_string(),
+        ("urgent", f"border-l-4 {PRIORITY_COLORS['urgent']}"),
+        ("high", f"border-l-4 {PRIORITY_COLORS['high']}"),
+        PRIORITY_COLORS["standard"],
+    )
     return rx.el.tr(
         rx.el.td(
             order["customer_name"], class_name="px-6 py-4 font-medium text-gray-900"
@@ -83,11 +97,16 @@ def order_row(order: rx.Var[dict]) -> rx.Component:
                     rx.icon("trash-2", class_name="h-4 w-4"),
                     class_name="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-md",
                 ),
+                rx.el.button(
+                    rx.icon("copy", class_name="h-4 w-4"),
+                    on_click=lambda: OrderState.duplicate_order(order["order_id"]),
+                    class_name="p-2 text-gray-500 hover:text-green-600 hover:bg-green-50 rounded-md",
+                ),
                 class_name="flex items-center justify-center gap-2",
             ),
             class_name="px-6 py-4",
         ),
-        class_name="border-b bg-white hover:bg-gray-50/50 transition-colors duration-150",
+        class_name=f"{row_class} border-b bg-white hover:bg-gray-50/50 transition-colors duration-150",
     )
 
 
@@ -113,9 +132,19 @@ def orders_page() -> rx.Component:
                     ),
                     rx.el.input(
                         placeholder="Search by customer...",
+                        on_change=OrderState.set_search_query,
                         class_name="w-full md:w-80 pl-10 pr-4 py-2 border rounded-lg focus:ring-purple-500 focus:border-purple-500",
                     ),
                     class_name="relative",
+                ),
+                rx.el.select(
+                    rx.el.option("All Priorities", value="all"),
+                    rx.el.option("Urgent", value="urgent"),
+                    rx.el.option("High", value="high"),
+                    rx.el.option("Standard", value="standard"),
+                    value=OrderState.priority_filter,
+                    on_change=OrderState.set_priority_filter,
+                    class_name="px-4 py-2 border rounded-lg bg-white focus:ring-purple-500",
                 ),
                 rx.el.div(
                     rx.el.button(
@@ -176,11 +205,11 @@ def orders_page() -> rx.Component:
                                 ),
                             )
                         ),
-                        rx.el.tbody(rx.foreach(OrderState.orders, order_row)),
+                        rx.el.tbody(rx.foreach(OrderState.filtered_orders, order_row)),
                         class_name="min-w-full divide-y divide-gray-200",
                     ),
                     rx.cond(
-                        OrderState.orders.length() == 0,
+                        OrderState.filtered_orders.length() == 0,
                         rx.el.div(
                             rx.icon(
                                 "shopping-cart",
