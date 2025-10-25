@@ -197,15 +197,34 @@ class OrderTemplate(TypedDict):
     measurements: dict
     special_instructions: str | None
     default_price: float | None
+    created_date: str
+    created_by: str | None
+    is_active: bool
 
 
-class QCChecklist(TypedDict):
+class QCCheckpoint(TypedDict):
     checklist_id: int
     order_id: int
     checkpoint_name: str
     status: str
     checked_by: str | None
     checked_date: str | None
+    notes: str | None
+    created_at: str
+
+
+class AlterationOrder(TypedDict):
+    alteration_id: int
+    customer_id: int
+    original_order_id: int | None
+    alteration_type: str
+    description: str
+    price: float
+    status: str
+    created_date: str
+    completion_date: str | None
+    assigned_worker: int | None
+    notes: str | None
 
 
 class PaymentInstallment(TypedDict):
@@ -220,3 +239,98 @@ class PaymentInstallment(TypedDict):
     status: str
     payment_method: str | None
     notes: str | None
+
+
+class WorkerAttendance(TypedDict):
+    attendance_id: int
+    worker_id: int
+    worker_name: str
+    date: str
+    check_in_time: str | None
+    check_out_time: str | None
+    total_hours: float | None
+    status: str
+    notes: str | None
+
+
+class WorkerTask(TypedDict):
+    task_id: int
+    order_id: int
+    worker_id: int
+    worker_name: str
+    task_type: str
+    assigned_date: str
+    completed_date: str | None
+    status: str
+    notes: str | None
+
+
+class WorkerSkill(TypedDict):
+    skill_id: int
+    worker_id: int
+    skill_name: str
+    proficiency_level: str
+    years_experience: int
+
+
+class WorkerLeave(TypedDict):
+    leave_id: int
+    worker_id: int
+    worker_name: str
+    leave_type: str
+    start_date: str
+    end_date: str
+    total_days: int
+    reason: str
+    status: str
+
+
+class ExpenseCategory(TypedDict):
+    category_id: int
+    category_name: str
+    description: str | None
+
+
+class Expense(TypedDict):
+    expense_id: int
+    category_id: int
+    category_name: str
+    amount: float
+    expense_date: str
+    description: str | None
+    vendor_name: str | None
+
+
+class BankAccount(TypedDict):
+    account_id: int
+    bank_name: str
+    account_number: str
+    account_type: str
+    balance: float
+    is_active: bool
+
+
+class AlertSetting(TypedDict):
+    setting_id: int
+    alert_type: str
+    enabled: bool
+    threshold_value: float | None
+    notification_method: str
+    recipients: str | None
+
+
+class AlertHistory(TypedDict):
+    alert_id: int
+    alert_type: str
+    message: str
+    severity: str
+    triggered_at: str
+    status: str
+
+
+class AutomationWorkflow(TypedDict):
+    workflow_id: int
+    workflow_name: str
+    trigger_event: str
+    is_active: bool
+    execution_count: int
