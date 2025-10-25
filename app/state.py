@@ -45,10 +45,15 @@ class OrderState(BaseState):
     pant_length: float | None = None
     inseam: float | None = None
     neck: float | None = None
+    show_template_manager: bool = False
 
     @rx.var
     def order_balance_payment(self) -> float:
         return self.order_total_amount - self.order_advance_payment
+
+    @rx.event
+    def open_template_manager(self):
+        return rx.toast.info("Order template manager is not yet implemented.")
 
     @rx.event(background=True)
     async def get_orders(self):

@@ -61,6 +61,10 @@ class Order(TypedDict):
     labor_cost: float | None
     material_cost: float | None
     profit: float | None
+    priority: str
+    is_bulk_order: bool
+    bulk_order_details: str | None
+    order_template_id: int | None
 
 
 class OrderWithCustomerName(Order):
@@ -167,6 +171,25 @@ class MaterialSupplier(TypedDict):
     supplier_id: int
     price: float
     is_preferred: bool
+    notes: str | None
+
+
+class OrderTemplate(TypedDict):
+    template_id: int
+    template_name: str
+    cloth_type: str
+    measurements: dict
+    special_instructions: str | None
+    default_price: float | None
+
+
+class QCChecklist(TypedDict):
+    checklist_id: int
+    order_id: int
+    checkpoint_name: str
+    status: str
+    checked_by: str | None
+    checked_date: str | None
 
 
 class PaymentInstallment(TypedDict):

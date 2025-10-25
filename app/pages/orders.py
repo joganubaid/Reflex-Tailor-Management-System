@@ -117,11 +117,20 @@ def orders_page() -> rx.Component:
                     ),
                     class_name="relative",
                 ),
-                rx.el.button(
-                    rx.icon("plus", class_name="mr-2 h-5 w-5"),
-                    "Add Order",
-                    on_click=OrderState.toggle_order_form,
-                    class_name="flex items-center bg-purple-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-purple-700 transition-colors",
+                rx.el.div(
+                    rx.el.button(
+                        rx.icon("layout-grid", class_name="mr-2 h-5 w-5"),
+                        "Templates",
+                        on_click=OrderState.open_template_manager,
+                        class_name="flex items-center bg-gray-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-gray-700 transition-colors",
+                    ),
+                    rx.el.button(
+                        rx.icon("plus", class_name="mr-2 h-5 w-5"),
+                        "Add Order",
+                        on_click=OrderState.toggle_order_form,
+                        class_name="flex items-center bg-purple-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-purple-700 transition-colors",
+                    ),
+                    class_name="flex items-center gap-2",
                 ),
                 class_name="flex justify-between items-center mb-6",
             ),
