@@ -69,3 +69,11 @@ def send_whatsapp_order_photo(
     """Sends an order photo for customer approval via WhatsApp."""
     message = f"Hi {customer_name}, here is a photo of your completed order #{order_id} for your approval. Please let us know if it looks good!"
     return _send_whatsapp_message(customer_phone, message, media_url=photo_url)
+
+
+def send_whatsapp_order_photo_for_approval(
+    customer_phone: str, customer_name: str, order_id: int, photo_url: str
+) -> bool:
+    """Send order photo to customer for approval via WhatsApp."""
+    message = f"Hi {customer_name}, here is a photo of your completed order #{order_id} for your approval. Please let us know if it looks good!"
+    return _send_whatsapp_message(customer_phone, message, media_url=photo_url)

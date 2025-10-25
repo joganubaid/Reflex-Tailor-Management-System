@@ -20,6 +20,7 @@ from app.states.purchase_order_state import PurchaseOrderState
 from app.states.loyalty_state import LoyaltyState
 from app.states.coupon_state import CouponState
 from app.states.referral_state import ReferralState
+from app.states.photo_state import PhotoState
 from app.pages.suppliers import suppliers_page
 from app.pages.purchase_orders import purchase_orders_page
 from app.pages.loyalty import loyalty_page

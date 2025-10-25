@@ -1,7 +1,9 @@
 import reflex as rx
 from app.state import OrderState
+from app.states.photo_state import PhotoState
 from app.components.sidebar import sidebar
 from app.components.order_form import order_form
+from app.components.photo_uploader import photo_upload_dialog
 
 STATUS_COLORS = {
     "pending": "bg-red-100 text-red-800",
@@ -66,6 +68,13 @@ def order_row(order: rx.Var[dict]) -> rx.Component:
         ),
         rx.el.td(
             rx.el.div(
+                rx.el.button(
+                    rx.icon("camera", class_name="h-4 w-4"),
+                    on_click=lambda: PhotoState.open_photo_uploader(
+                        "order_photo", order["order_id"]
+                    ),
+                    class_name="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-md",
+                ),
                 rx.el.button(
                     rx.icon("file-pen-line", class_name="h-4 w-4"),
                     class_name="p-2 text-gray-500 hover:text-purple-600 hover:bg-purple-50 rounded-md",
@@ -185,6 +194,7 @@ def orders_page() -> rx.Component:
                 class_name="bg-white p-6 rounded-xl shadow-sm",
             ),
             order_form(),
+            photo_upload_dialog(),
             class_name="flex-1 p-6 md:p-8 overflow-auto",
         ),
         class_name="flex min-h-screen w-full bg-gray-50 font-['Lato']",
