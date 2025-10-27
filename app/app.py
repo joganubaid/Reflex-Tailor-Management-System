@@ -70,7 +70,6 @@ app.add_page(
     billing_page, route="/billing", on_load=BillingState.get_orders_for_billing
 )
 app.add_page(workers_page, route="/workers", on_load=WorkerState.get_workers)
-app.add_page(workers_page, route="/workers", on_load=WorkerState.get_workers)
 app.add_page(reports_page, route="/reports", on_load=ReportState.load_all_reports)
 app.add_page(
     measurements_page, route="/measurements", on_load=MeasurementState.get_measurements

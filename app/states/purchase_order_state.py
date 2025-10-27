@@ -3,16 +3,17 @@ from typing import cast, Any
 from app.models import Supplier, Material
 from sqlalchemy import text
 import datetime
+from pydantic import BaseModel
 
 
-class PurchaseOrderItem(rx.Base):
+class PurchaseOrderItem(BaseModel):
     material_id: int
     material_name: str
     quantity: float
     unit_price: float
 
 
-class PurchaseOrder(rx.Base):
+class PurchaseOrder(BaseModel):
     po_id: int
     supplier_name: str
     po_date: str
