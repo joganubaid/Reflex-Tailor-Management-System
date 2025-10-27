@@ -137,33 +137,37 @@ def loyalty_page() -> rx.Component:
                             class_name="text-xl font-semibold text-gray-700 mb-4",
                         ),
                         rx.el.div(
-                            rx.el.table(
-                                rx.el.thead(
-                                    rx.el.tr(
-                                        rx.el.th(
-                                            "Rank",
-                                            class_name="px-6 py-3 text-center text-xs font-bold uppercase tracking-wider",
-                                        ),
-                                        rx.el.th(
-                                            "Customer",
-                                            class_name="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider",
-                                        ),
-                                        rx.el.th(
-                                            "Points",
-                                            class_name="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider",
-                                        ),
-                                        rx.el.th(
-                                            "Tier",
-                                            class_name="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider",
-                                        ),
-                                    )
+                            rx.el.div(
+                                rx.el.table(
+                                    rx.el.thead(
+                                        rx.el.tr(
+                                            rx.el.th(
+                                                "Rank",
+                                                class_name="px-6 py-3 text-center text-xs font-bold uppercase tracking-wider",
+                                            ),
+                                            rx.el.th(
+                                                "Customer",
+                                                class_name="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider",
+                                            ),
+                                            rx.el.th(
+                                                "Points",
+                                                class_name="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider",
+                                            ),
+                                            rx.el.th(
+                                                "Tier",
+                                                class_name="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider",
+                                            ),
+                                        )
+                                    ),
+                                    rx.el.tbody(
+                                        rx.foreach(
+                                            LoyaltyState.points_leaderboard,
+                                            leaderboard_row,
+                                        )
+                                    ),
+                                    class_name="min-w-full divide-y divide-gray-200",
                                 ),
-                                rx.el.tbody(
-                                    rx.foreach(
-                                        LoyaltyState.points_leaderboard, leaderboard_row
-                                    )
-                                ),
-                                class_name="min-w-full divide-y divide-gray-200",
+                                class_name="overflow-x-auto",
                             ),
                             class_name="overflow-hidden border rounded-xl",
                         ),

@@ -124,49 +124,53 @@ def payments_page() -> rx.Component:
                 ),
                 rx.el.div(
                     rx.el.div(
-                        rx.el.table(
-                            rx.el.thead(
-                                rx.el.tr(
-                                    rx.el.th(
-                                        "Order ID",
-                                        class_name="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider",
-                                    ),
-                                    rx.el.th(
-                                        "Customer",
-                                        class_name="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider",
-                                    ),
-                                    rx.el.th(
-                                        "Installment",
-                                        class_name="px-6 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider",
-                                    ),
-                                    rx.el.th(
-                                        "Amount",
-                                        class_name="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider",
-                                    ),
-                                    rx.el.th(
-                                        "Due Date",
-                                        class_name="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider",
-                                    ),
-                                    rx.el.th(
-                                        "Status",
-                                        class_name="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider",
-                                    ),
-                                    rx.el.th(
-                                        "Paid On",
-                                        class_name="px-6 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider",
-                                    ),
-                                    rx.el.th(
-                                        "Actions",
-                                        class_name="px-6 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider",
-                                    ),
-                                )
+                        rx.el.div(
+                            rx.el.table(
+                                rx.el.thead(
+                                    rx.el.tr(
+                                        rx.el.th(
+                                            "Order ID",
+                                            class_name="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider",
+                                        ),
+                                        rx.el.th(
+                                            "Customer",
+                                            class_name="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider",
+                                        ),
+                                        rx.el.th(
+                                            "Installment",
+                                            class_name="px-6 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider",
+                                        ),
+                                        rx.el.th(
+                                            "Amount",
+                                            class_name="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider",
+                                        ),
+                                        rx.el.th(
+                                            "Due Date",
+                                            class_name="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider",
+                                        ),
+                                        rx.el.th(
+                                            "Status",
+                                            class_name="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider",
+                                        ),
+                                        rx.el.th(
+                                            "Paid On",
+                                            class_name="px-6 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider",
+                                        ),
+                                        rx.el.th(
+                                            "Actions",
+                                            class_name="px-6 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider",
+                                        ),
+                                    )
+                                ),
+                                rx.el.tbody(
+                                    rx.foreach(
+                                        PaymentState.filtered_installments,
+                                        installment_row,
+                                    )
+                                ),
+                                class_name="min-w-full divide-y divide-gray-200",
                             ),
-                            rx.el.tbody(
-                                rx.foreach(
-                                    PaymentState.filtered_installments, installment_row
-                                )
-                            ),
-                            class_name="min-w-full divide-y divide-gray-200",
+                            class_name="overflow-x-auto",
                         ),
                         rx.cond(
                             PaymentState.filtered_installments.length() == 0,
@@ -187,7 +191,7 @@ def payments_page() -> rx.Component:
                             ),
                             None,
                         ),
-                        class_name="overflow-x-auto border border-gray-200 rounded-xl",
+                        class_name="overflow-hidden border border-gray-200 rounded-xl",
                     ),
                     class_name="bg-white p-2 md:p-6 rounded-xl shadow-sm",
                 ),

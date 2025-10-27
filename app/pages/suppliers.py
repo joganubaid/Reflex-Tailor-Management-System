@@ -107,47 +107,50 @@ def suppliers_page() -> rx.Component:
                 ),
                 rx.el.div(
                     rx.el.div(
-                        rx.el.table(
-                            rx.el.thead(
-                                rx.el.tr(
-                                    rx.el.th(
-                                        "Name",
-                                        scope="col",
-                                        class_name="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider",
-                                    ),
-                                    rx.el.th(
-                                        "Contact",
-                                        scope="col",
-                                        class_name="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider",
-                                    ),
-                                    rx.el.th(
-                                        "Email",
-                                        scope="col",
-                                        class_name="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider",
-                                    ),
-                                    rx.el.th(
-                                        "Rating",
-                                        scope="col",
-                                        class_name="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider",
-                                    ),
-                                    rx.el.th(
-                                        "Materials",
-                                        scope="col",
-                                        class_name="px-6 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider",
-                                    ),
-                                    rx.el.th(
-                                        "Actions",
-                                        scope="col",
-                                        class_name="px-6 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider",
-                                    ),
-                                )
+                        rx.el.div(
+                            rx.el.table(
+                                rx.el.thead(
+                                    rx.el.tr(
+                                        rx.el.th(
+                                            "Name",
+                                            scope="col",
+                                            class_name="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider",
+                                        ),
+                                        rx.el.th(
+                                            "Contact",
+                                            scope="col",
+                                            class_name="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider",
+                                        ),
+                                        rx.el.th(
+                                            "Email",
+                                            scope="col",
+                                            class_name="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider",
+                                        ),
+                                        rx.el.th(
+                                            "Rating",
+                                            scope="col",
+                                            class_name="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider",
+                                        ),
+                                        rx.el.th(
+                                            "Materials",
+                                            scope="col",
+                                            class_name="px-6 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider",
+                                        ),
+                                        rx.el.th(
+                                            "Actions",
+                                            scope="col",
+                                            class_name="px-6 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider",
+                                        ),
+                                    )
+                                ),
+                                rx.el.tbody(
+                                    rx.foreach(
+                                        SupplierState.filtered_suppliers, supplier_row
+                                    )
+                                ),
+                                class_name="min-w-full divide-y divide-gray-200",
                             ),
-                            rx.el.tbody(
-                                rx.foreach(
-                                    SupplierState.filtered_suppliers, supplier_row
-                                )
-                            ),
-                            class_name="min-w-full divide-y divide-gray-200",
+                            class_name="overflow-x-auto",
                         ),
                         rx.cond(
                             SupplierState.filtered_suppliers.length() == 0,

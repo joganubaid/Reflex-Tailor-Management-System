@@ -184,39 +184,44 @@ def expenses_page() -> rx.Component:
                 ),
                 rx.el.div(
                     rx.el.div(
-                        rx.el.table(
-                            rx.el.thead(
-                                rx.el.tr(
-                                    rx.el.th(
-                                        "Date",
-                                        class_name="px-6 py-3 text-left text-xs font-bold uppercase",
-                                    ),
-                                    rx.el.th(
-                                        "Category",
-                                        class_name="px-6 py-3 text-left text-xs font-bold uppercase",
-                                    ),
-                                    rx.el.th(
-                                        "Description",
-                                        class_name="px-6 py-3 text-left text-xs font-bold uppercase",
-                                    ),
-                                    rx.el.th(
-                                        "Amount",
-                                        class_name="px-6 py-3 text-left text-xs font-bold uppercase",
-                                    ),
-                                    rx.el.th(
-                                        "Vendor",
-                                        class_name="px-6 py-3 text-left text-xs font-bold uppercase",
-                                    ),
-                                    rx.el.th(
-                                        "Action",
-                                        class_name="px-6 py-3 text-center text-xs font-bold uppercase",
-                                    ),
-                                )
+                        rx.el.div(
+                            rx.el.table(
+                                rx.el.thead(
+                                    rx.el.tr(
+                                        rx.el.th(
+                                            "Date",
+                                            class_name="px-6 py-3 text-left text-xs font-bold uppercase",
+                                        ),
+                                        rx.el.th(
+                                            "Category",
+                                            class_name="px-6 py-3 text-left text-xs font-bold uppercase",
+                                        ),
+                                        rx.el.th(
+                                            "Description",
+                                            class_name="px-6 py-3 text-left text-xs font-bold uppercase",
+                                        ),
+                                        rx.el.th(
+                                            "Amount",
+                                            class_name="px-6 py-3 text-left text-xs font-bold uppercase",
+                                        ),
+                                        rx.el.th(
+                                            "Vendor",
+                                            class_name="px-6 py-3 text-left text-xs font-bold uppercase",
+                                        ),
+                                        rx.el.th(
+                                            "Action",
+                                            class_name="px-6 py-3 text-center text-xs font-bold uppercase",
+                                        ),
+                                    )
+                                ),
+                                rx.el.tbody(
+                                    rx.foreach(
+                                        ExpenseState.filtered_expenses, expense_row
+                                    )
+                                ),
+                                class_name="min-w-full divide-y divide-gray-200",
                             ),
-                            rx.el.tbody(
-                                rx.foreach(ExpenseState.filtered_expenses, expense_row)
-                            ),
-                            class_name="min-w-full divide-y divide-gray-200",
+                            class_name="overflow-x-auto",
                         ),
                         rx.cond(
                             ExpenseState.filtered_expenses.length() == 0,

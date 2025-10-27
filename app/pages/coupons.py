@@ -193,43 +193,46 @@ def coupons_page() -> rx.Component:
                 ),
                 rx.el.div(
                     rx.el.div(
-                        rx.el.table(
-                            rx.el.thead(
-                                rx.el.tr(
-                                    rx.el.th(
-                                        "Code",
-                                        class_name="px-6 py-3 text-left text-xs font-bold uppercase",
-                                    ),
-                                    rx.el.th(
-                                        "Discount",
-                                        class_name="px-6 py-3 text-left text-xs font-bold uppercase",
-                                    ),
-                                    rx.el.th(
-                                        "Min Order",
-                                        class_name="px-6 py-3 text-left text-xs font-bold uppercase",
-                                    ),
-                                    rx.el.th(
-                                        "Valid Period",
-                                        class_name="px-6 py-3 text-left text-xs font-bold uppercase",
-                                    ),
-                                    rx.el.th(
-                                        "Usage",
-                                        class_name="px-6 py-3 text-left text-xs font-bold uppercase",
-                                    ),
-                                    rx.el.th(
-                                        "Status",
-                                        class_name="px-6 py-3 text-left text-xs font-bold uppercase",
-                                    ),
-                                    rx.el.th(
-                                        "Actions",
-                                        class_name="px-6 py-3 text-center text-xs font-bold uppercase",
-                                    ),
-                                )
+                        rx.el.div(
+                            rx.el.table(
+                                rx.el.thead(
+                                    rx.el.tr(
+                                        rx.el.th(
+                                            "Code",
+                                            class_name="px-6 py-3 text-left text-xs font-bold uppercase",
+                                        ),
+                                        rx.el.th(
+                                            "Discount",
+                                            class_name="px-6 py-3 text-left text-xs font-bold uppercase",
+                                        ),
+                                        rx.el.th(
+                                            "Min Order",
+                                            class_name="px-6 py-3 text-left text-xs font-bold uppercase",
+                                        ),
+                                        rx.el.th(
+                                            "Valid Period",
+                                            class_name="px-6 py-3 text-left text-xs font-bold uppercase",
+                                        ),
+                                        rx.el.th(
+                                            "Usage",
+                                            class_name="px-6 py-3 text-left text-xs font-bold uppercase",
+                                        ),
+                                        rx.el.th(
+                                            "Status",
+                                            class_name="px-6 py-3 text-left text-xs font-bold uppercase",
+                                        ),
+                                        rx.el.th(
+                                            "Actions",
+                                            class_name="px-6 py-3 text-center text-xs font-bold uppercase",
+                                        ),
+                                    )
+                                ),
+                                rx.el.tbody(
+                                    rx.foreach(CouponState.filtered_coupons, coupon_row)
+                                ),
+                                class_name="min-w-full divide-y divide-gray-200",
                             ),
-                            rx.el.tbody(
-                                rx.foreach(CouponState.filtered_coupons, coupon_row)
-                            ),
-                            class_name="min-w-full divide-y divide-gray-200",
+                            class_name="overflow-x-auto",
                         ),
                         rx.cond(
                             CouponState.filtered_coupons.length() == 0,
@@ -250,7 +253,7 @@ def coupons_page() -> rx.Component:
                             ),
                             None,
                         ),
-                        class_name="overflow-x-auto border border-gray-200 rounded-xl",
+                        class_name="overflow-hidden border border-gray-200 rounded-xl",
                     ),
                     class_name="bg-white p-6 rounded-xl shadow-sm",
                 ),

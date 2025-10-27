@@ -126,33 +126,37 @@ def referrals_page() -> rx.Component:
                             class_name="text-xl font-semibold text-gray-700 mb-4",
                         ),
                         rx.el.div(
-                            rx.el.table(
-                                rx.el.thead(
-                                    rx.el.tr(
-                                        rx.el.th(
-                                            "Rank",
-                                            class_name="px-4 py-3 text-center text-xs font-bold uppercase",
-                                        ),
-                                        rx.el.th(
-                                            "Customer",
-                                            class_name="px-4 py-3 text-left text-xs font-bold uppercase",
-                                        ),
-                                        rx.el.th(
-                                            "Referrals",
-                                            class_name="px-4 py-3 text-center text-xs font-bold uppercase",
-                                        ),
-                                        rx.el.th(
-                                            "Total Rewards",
-                                            class_name="px-4 py-3 text-center text-xs font-bold uppercase",
-                                        ),
-                                    )
+                            rx.el.div(
+                                rx.el.table(
+                                    rx.el.thead(
+                                        rx.el.tr(
+                                            rx.el.th(
+                                                "Rank",
+                                                class_name="px-4 py-3 text-center text-xs font-bold uppercase",
+                                            ),
+                                            rx.el.th(
+                                                "Customer",
+                                                class_name="px-4 py-3 text-left text-xs font-bold uppercase",
+                                            ),
+                                            rx.el.th(
+                                                "Referrals",
+                                                class_name="px-4 py-3 text-center text-xs font-bold uppercase",
+                                            ),
+                                            rx.el.th(
+                                                "Total Rewards",
+                                                class_name="px-4 py-3 text-center text-xs font-bold uppercase",
+                                            ),
+                                        )
+                                    ),
+                                    rx.el.tbody(
+                                        rx.foreach(
+                                            ReferralState.top_referrers,
+                                            top_referrer_row,
+                                        )
+                                    ),
+                                    class_name="min-w-full divide-y divide-gray-200",
                                 ),
-                                rx.el.tbody(
-                                    rx.foreach(
-                                        ReferralState.top_referrers, top_referrer_row
-                                    )
-                                ),
-                                class_name="min-w-full divide-y divide-gray-200",
+                                class_name="overflow-x-auto",
                             ),
                             class_name="overflow-hidden border rounded-xl",
                         ),
@@ -191,41 +195,45 @@ def referrals_page() -> rx.Component:
                             class_name="flex justify-between items-center mb-4",
                         ),
                         rx.el.div(
-                            rx.el.table(
-                                rx.el.thead(
-                                    rx.el.tr(
-                                        rx.el.th(
-                                            "Referrer",
-                                            class_name="px-6 py-3 text-left text-xs font-bold uppercase",
-                                        ),
-                                        rx.el.th(
-                                            "Referred Customer",
-                                            class_name="px-6 py-3 text-left text-xs font-bold uppercase",
-                                        ),
-                                        rx.el.th(
-                                            "Date",
-                                            class_name="px-6 py-3 text-left text-xs font-bold uppercase",
-                                        ),
-                                        rx.el.th(
-                                            "Status",
-                                            class_name="px-6 py-3 text-left text-xs font-bold uppercase",
-                                        ),
-                                        rx.el.th(
-                                            "Reward",
-                                            class_name="px-6 py-3 text-left text-xs font-bold uppercase",
-                                        ),
-                                        rx.el.th(
-                                            "Order Made",
-                                            class_name="px-6 py-3 text-center text-xs font-bold uppercase",
-                                        ),
-                                    )
+                            rx.el.div(
+                                rx.el.table(
+                                    rx.el.thead(
+                                        rx.el.tr(
+                                            rx.el.th(
+                                                "Referrer",
+                                                class_name="px-6 py-3 text-left text-xs font-bold uppercase",
+                                            ),
+                                            rx.el.th(
+                                                "Referred Customer",
+                                                class_name="px-6 py-3 text-left text-xs font-bold uppercase",
+                                            ),
+                                            rx.el.th(
+                                                "Date",
+                                                class_name="px-6 py-3 text-left text-xs font-bold uppercase",
+                                            ),
+                                            rx.el.th(
+                                                "Status",
+                                                class_name="px-6 py-3 text-left text-xs font-bold uppercase",
+                                            ),
+                                            rx.el.th(
+                                                "Reward",
+                                                class_name="px-6 py-3 text-left text-xs font-bold uppercase",
+                                            ),
+                                            rx.el.th(
+                                                "Order Made",
+                                                class_name="px-6 py-3 text-center text-xs font-bold uppercase",
+                                            ),
+                                        )
+                                    ),
+                                    rx.el.tbody(
+                                        rx.foreach(
+                                            ReferralState.filtered_referrals,
+                                            referral_row,
+                                        )
+                                    ),
+                                    class_name="min-w-full divide-y divide-gray-200",
                                 ),
-                                rx.el.tbody(
-                                    rx.foreach(
-                                        ReferralState.filtered_referrals, referral_row
-                                    )
-                                ),
-                                class_name="min-w-full divide-y divide-gray-200",
+                                class_name="overflow-x-auto",
                             ),
                             rx.cond(
                                 ReferralState.filtered_referrals.length() == 0,
@@ -246,7 +254,7 @@ def referrals_page() -> rx.Component:
                                 ),
                                 None,
                             ),
-                            class_name="overflow-x-auto border rounded-xl",
+                            class_name="overflow-hidden border rounded-xl",
                         ),
                         class_name="bg-white p-6 rounded-xl shadow-sm",
                     ),
