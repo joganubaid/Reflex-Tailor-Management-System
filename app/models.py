@@ -11,8 +11,8 @@ class Customer(TypedDict):
     registration_date: str
     total_orders: int
     notes: str | None
-    whatsapp_opt_in: bool
-    preferred_notification: str
+    opt_in_whatsapp: bool
+    prefer_whatsapp: str
 
 
 class Measurement(TypedDict):
