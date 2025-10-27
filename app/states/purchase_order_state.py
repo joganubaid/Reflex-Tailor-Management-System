@@ -60,7 +60,7 @@ class PurchaseOrderState(rx.State):
                     else None
                 )
                 row_dict["total_amount"] = float(row_dict["total_amount"])
-                purchase_orders_data.append(PurchaseOrder.create(**row_dict))
+                purchase_orders_data.append(PurchaseOrder(**row_dict))
             async with self:
                 self.purchase_orders = purchase_orders_data
 

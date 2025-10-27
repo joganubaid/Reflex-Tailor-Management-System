@@ -78,6 +78,7 @@ def inventory_page() -> rx.Component:
                         ),
                         rx.el.input(
                             placeholder="Search by material name or type...",
+                            type="search",
                             on_change=MaterialState.set_search_query,
                             class_name="w-full md:w-80 pl-10 pr-4 py-2 border rounded-lg focus:ring-purple-500 focus:border-purple-500",
                             default_value=MaterialState.search_query,

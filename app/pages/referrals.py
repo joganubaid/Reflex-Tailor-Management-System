@@ -117,7 +117,7 @@ def referrals_page() -> rx.Component:
                         f"{ReferralState.conversion_rate.to_string()}%",
                         "bg-orange-500",
                     ),
-                    class_name="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8",
+                    class_name="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6 mb-8",
                 ),
                 rx.el.div(
                     rx.el.div(

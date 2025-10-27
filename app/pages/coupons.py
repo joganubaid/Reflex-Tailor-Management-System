@@ -166,7 +166,7 @@ def coupons_page() -> rx.Component:
                         CouponState.avg_discount_value.to_string() + "%",
                         "bg-orange-500",
                     ),
-                    class_name="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8",
+                    class_name="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8",
                 ),
                 rx.el.div(
                     rx.el.div(
@@ -176,6 +176,7 @@ def coupons_page() -> rx.Component:
                         ),
                         rx.el.input(
                             placeholder="Search by coupon code...",
+                            type="search",
                             on_change=CouponState.set_search_query,
                             class_name="w-full md:w-80 pl-10 pr-4 py-2 border rounded-lg focus:ring-purple-500 focus:border-purple-500",
                             default_value=CouponState.search_query,

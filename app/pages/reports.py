@@ -96,16 +96,16 @@ def reports_page() -> rx.Component:
                     metric_card(
                         "badge_alert",
                         "Total Wastage Cost",
-                        f"₹{ReportState.total_wastage_cost.to_string()}",
+                        f"’{ReportState.total_wastage_cost.to_string()}",
                         "bg-red-500",
                     ),
                     metric_card(
                         "receipt",
                         "GST Collected (This Month)",
-                        f"₹{ReportState.total_gst_collected.to_string()}",
+                        f"\u2009{ReportState.total_gst_collected.to_string()}",
                         "bg-purple-500",
                     ),
-                    class_name="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8",
+                    class_name="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8",
                 ),
                 rx.el.div(
                     rx.el.h2(

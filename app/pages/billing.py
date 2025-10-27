@@ -102,20 +102,18 @@ def billing_page() -> rx.Component:
                         ),
                         rx.el.input(
                             placeholder="Search by order ID or customer...",
-                            class_name="w-full md:w-80 pl-10 pr-4 py-2 border rounded-lg focus:ring-purple-500 focus:border-purple-500",
+                            class_name="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-purple-500 focus:border-purple-500",
                         ),
-                        class_name="relative",
+                        class_name="relative w-full md:w-80",
                     ),
-                    rx.el.div(
-                        rx.el.select(
-                            rx.el.option("All Statuses", value="all"),
-                            rx.el.option("Paid", value="paid"),
-                            rx.el.option("Partial", value="partial"),
-                            rx.el.option("Pending", value="pending"),
-                            class_name="px-4 py-2 border rounded-lg focus:ring-purple-500 focus:border-purple-500 bg-white",
-                        )
+                    rx.el.select(
+                        rx.el.option("All Statuses", value="all"),
+                        rx.el.option("Paid", value="paid"),
+                        rx.el.option("Partial", value="partial"),
+                        rx.el.option("Pending", value="pending"),
+                        class_name="w-full md:w-auto px-4 py-2 border rounded-lg focus:ring-purple-500 focus:border-purple-500 bg-white",
                     ),
-                    class_name="flex justify-between items-center mb-6",
+                    class_name="flex flex-col md:flex-row justify-between items-center mb-6 gap-4",
                 ),
                 rx.el.div(
                     rx.el.div(
@@ -181,9 +179,9 @@ def billing_page() -> rx.Component:
                             ),
                             None,
                         ),
-                        class_name="overflow-hidden border border-gray-200 rounded-xl",
+                        class_name="overflow-x-auto border border-gray-200 rounded-xl",
                     ),
-                    class_name="bg-white p-4 md:p-6 rounded-xl shadow-sm",
+                    class_name="bg-white p-2 md:p-6 rounded-xl shadow-sm",
                 ),
                 class_name="flex-1 p-4 md:p-8 overflow-auto",
             ),

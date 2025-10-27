@@ -90,6 +90,7 @@ def suppliers_page() -> rx.Component:
                         ),
                         rx.el.input(
                             placeholder="Search by name or contact...",
+                            type="search",
                             on_change=SupplierState.set_search_query,
                             class_name="w-full md:w-80 pl-10 pr-4 py-2 border rounded-lg focus:ring-purple-500 focus:border-purple-500",
                             default_value=SupplierState.search_query,

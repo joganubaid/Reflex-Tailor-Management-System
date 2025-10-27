@@ -132,83 +132,81 @@ def orders_page() -> rx.Component:
                         ),
                         rx.el.input(
                             placeholder="Search by customer...",
+                            type="search",
                             on_change=OrderState.set_search_query,
                             class_name="w-full md:w-80 pl-10 pr-4 py-2 border rounded-lg focus:ring-purple-500 focus:border-purple-500",
                         ),
-                        class_name="relative",
-                    ),
-                    rx.el.select(
-                        rx.el.option("All Priorities", value="all"),
-                        rx.el.option("Urgent", value="urgent"),
-                        rx.el.option("High", value="high"),
-                        rx.el.option("Standard", value="standard"),
-                        value=OrderState.priority_filter,
-                        on_change=OrderState.set_priority_filter,
-                        class_name="px-4 py-2 border rounded-lg bg-white focus:ring-purple-500",
+                        class_name="relative w-full md:w-auto",
                     ),
                     rx.el.div(
-                        rx.el.button(
-                            rx.icon("layout-grid", class_name="mr-2 h-5 w-5"),
-                            "Templates",
-                            on_click=OrderState.open_template_manager,
-                            class_name="flex items-center bg-gray-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-gray-700 transition-colors",
+                        rx.el.select(
+                            rx.el.option("All Priorities", value="all"),
+                            rx.el.option("Urgent", value="urgent"),
+                            rx.el.option("High", value="high"),
+                            rx.el.option("Standard", value="standard"),
+                            value=OrderState.priority_filter,
+                            on_change=OrderState.set_priority_filter,
+                            class_name="w-full px-4 py-2 border rounded-lg bg-white focus:ring-purple-500",
                         ),
                         rx.el.button(
-                            rx.icon("plus", class_name="mr-2 h-5 w-5"),
-                            "Add Order",
+                            rx.icon("plus", class_name="md:mr-2 h-5 w-5"),
+                            rx.el.span("Add Order", class_name="hidden md:inline"),
                             on_click=OrderState.toggle_order_form,
-                            class_name="flex items-center bg-purple-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-purple-700 transition-colors",
+                            class_name="flex items-center justify-center bg-purple-600 text-white p-2 md:px-4 md:py-2 rounded-lg font-semibold hover:bg-purple-700 transition-colors",
                         ),
-                        class_name="flex items-center gap-2",
+                        class_name="flex items-center gap-2 w-full md:w-auto",
                     ),
-                    class_name="flex justify-between items-center mb-6",
+                    class_name="flex flex-col md:flex-row justify-between items-center mb-6 gap-4",
                 ),
                 rx.el.div(
                     rx.el.div(
-                        rx.el.table(
-                            rx.el.thead(
-                                rx.el.tr(
-                                    rx.el.th(
-                                        "Customer",
-                                        scope="col",
-                                        class_name="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider",
-                                    ),
-                                    rx.el.th(
-                                        "Order Date",
-                                        scope="col",
-                                        class_name="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider",
-                                    ),
-                                    rx.el.th(
-                                        "Delivery Date",
-                                        scope="col",
-                                        class_name="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider",
-                                    ),
-                                    rx.el.th(
-                                        "Status",
-                                        scope="col",
-                                        class_name="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider",
-                                    ),
-                                    rx.el.th(
-                                        "Total",
-                                        scope="col",
-                                        class_name="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider",
-                                    ),
-                                    rx.el.th(
-                                        "Balance",
-                                        scope="col",
-                                        class_name="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider",
-                                    ),
-                                    rx.el.th(
-                                        "Actions",
-                                        scope="col",
-                                        class_name="px-6 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider",
-                                    ),
-                                )
+                        rx.el.div(
+                            rx.el.table(
+                                rx.el.thead(
+                                    rx.el.tr(
+                                        rx.el.th(
+                                            "Customer",
+                                            scope="col",
+                                            class_name="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider",
+                                        ),
+                                        rx.el.th(
+                                            "Order Date",
+                                            scope="col",
+                                            class_name="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider",
+                                        ),
+                                        rx.el.th(
+                                            "Delivery Date",
+                                            scope="col",
+                                            class_name="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider",
+                                        ),
+                                        rx.el.th(
+                                            "Status",
+                                            scope="col",
+                                            class_name="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider",
+                                        ),
+                                        rx.el.th(
+                                            "Total",
+                                            scope="col",
+                                            class_name="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider",
+                                        ),
+                                        rx.el.th(
+                                            "Balance",
+                                            scope="col",
+                                            class_name="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider",
+                                        ),
+                                        rx.el.th(
+                                            "Actions",
+                                            scope="col",
+                                            class_name="px-6 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider",
+                                        ),
+                                    )
+                                ),
+                                rx.el.tbody(
+                                    rx.foreach(OrderState.filtered_orders, order_row)
+                                ),
+                                class_name="min-w-full divide-y divide-gray-200",
                             ),
-                            rx.el.tbody(
-                                rx.foreach(OrderState.filtered_orders, order_row)
-                            ),
-                            class_name="min-w-full divide-y divide-gray-200",
+                            class_name="overflow-x-auto",
                         ),
                         rx.cond(
                             OrderState.filtered_orders.length() == 0,
@@ -229,9 +227,9 @@ def orders_page() -> rx.Component:
                             ),
                             None,
                         ),
-                        class_name="overflow-hidden border border-gray-200 rounded-xl",
+                        class_name="border border-gray-200 rounded-xl",
                     ),
-                    class_name="bg-white p-6 rounded-xl shadow-sm",
+                    class_name="bg-white p-2 md:p-6 rounded-xl shadow-sm",
                 ),
                 order_form(),
                 photo_upload_dialog(),

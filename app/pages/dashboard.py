@@ -47,7 +47,7 @@ def dashboard_page() -> rx.Component:
                     metric_card(
                         "indian-rupee",
                         "Today's Revenue",
-                        f"₹{DashboardState.today_revenue.to_string()}",
+                        f"\u2009{DashboardState.today_revenue.to_string()}",
                         "bg-green-500",
                     ),
                     metric_card(
@@ -62,7 +62,7 @@ def dashboard_page() -> rx.Component:
                         DashboardState.ready_orders_count.to_string(),
                         "bg-blue-500",
                     ),
-                    class_name="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8",
+                    class_name="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8",
                 ),
                 rx.el.div(
                     rx.el.div(
