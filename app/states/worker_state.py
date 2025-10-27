@@ -124,7 +124,6 @@ class WorkerState(rx.State):
         self.role = "tailor"
         self.salary = 0.0
         self.active_status = True
-        self.skills = []
 
     @rx.event
     def show_delete_confirmation(self, worker: Worker):

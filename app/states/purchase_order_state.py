@@ -48,10 +48,21 @@ class PurchaseOrderState(rx.State):
                      JOIN suppliers s ON po.supplier_id = s.supplier_id
                      ORDER BY po.po_date DESC""")
             )
+            rows = result.mappings().all()
+            purchase_orders_data = []
+            for row in rows:
+                row_dict = dict(row)
+                row_dict["po_id"] = int(row_dict["po_id"])
+                row_dict["po_date"] = str(row_dict["po_date"])
+                row_dict["expected_delivery_date"] = (
+                    str(row_dict["expected_delivery_date"])
+                    if row_dict.get("expected_delivery_date")
+                    else None
+                )
+                row_dict["total_amount"] = float(row_dict["total_amount"])
+                purchase_orders_data.append(PurchaseOrder.create(**row_dict))
             async with self:
-                self.purchase_orders = [
-                    cast(PurchaseOrder, dict(row)) for row in result.mappings().all()
-                ]
+                self.purchase_orders = purchase_orders_data
 
     @rx.event(background=True)
     async def load_po_form_data(self):
