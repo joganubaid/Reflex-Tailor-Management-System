@@ -85,6 +85,8 @@ class OrderMaterial(TypedDict):
 class PaymentInstallment(TypedDict):
     installment_id: int
     order_id: int
+    customer_name: str
+    customer_phone: str
     installment_number: int
     amount: float
     due_date: str
@@ -210,20 +212,6 @@ class AlterationOrder(TypedDict):
     created_date: str
     completion_date: str | None
     assigned_worker: int | None
-    notes: str | None
-
-
-class PaymentInstallment(TypedDict):
-    installment_id: int
-    order_id: int
-    customer_name: str
-    customer_phone: str
-    installment_number: int
-    amount: float
-    due_date: str
-    paid_date: str | None
-    status: str
-    payment_method: str | None
     notes: str | None
 
 

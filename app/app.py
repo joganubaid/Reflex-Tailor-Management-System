@@ -23,12 +23,16 @@ from app.states.coupon_state import CouponState
 from app.states.referral_state import ReferralState
 from app.states.photo_state import PhotoState
 from app.states.task_state import TaskState
+from app.states.expense_state import ExpenseState
+from app.states.alert_state import AlertState
 from app.pages.suppliers import suppliers_page
 from app.pages.purchase_orders import purchase_orders_page
 from app.pages.loyalty import loyalty_page
 from app.pages.coupons import coupons_page
 from app.pages.referrals import referrals_page
 from app.pages.productivity import productivity_page
+from app.pages.expenses import expenses_page
+from app.pages.alerts import alerts_page
 from app.components.sidebar import sidebar
 
 
@@ -90,3 +94,9 @@ app.add_page(productivity_page, route="/productivity", on_load=TaskState.get_tas
 app.add_page(
     payments_page, route="/payments", on_load=PaymentState.get_all_installments
 )
+app.add_page(
+    expenses_page,
+    route="/expenses",
+    on_load=[ExpenseState.get_expenses, ExpenseState.load_form_data],
+)
+app.add_page(alerts_page, route="/alerts", on_load=AlertState.load_page_data)
