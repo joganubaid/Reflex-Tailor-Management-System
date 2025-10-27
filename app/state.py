@@ -49,10 +49,79 @@ class OrderState(BaseState):
     neck: float | None = None
     order_priority: str = "standard"
     show_template_manager: bool = False
+    workers_with_workload: list[dict] = []
+    applied_coupon_code: str = ""
+    coupon_discount: float = 0.0
+    coupon_message: str = ""
+
+    @rx.var
+    def final_total_amount(self) -> float:
+        """Calculate final amount after coupon discount"""
+        return max(0, self.order_total_amount - self.coupon_discount)
+
+    @rx.var
+    def final_balance_payment(self) -> float:
+        """Calculate final balance after discount and advance"""
+        return max(0, self.final_total_amount - self.order_advance_payment)
 
     @rx.var
     def order_balance_payment(self) -> float:
         return self.order_total_amount - self.order_advance_payment
+
+    @rx.event
+    def set_applied_coupon_code(self, code: str):
+        self.applied_coupon_code = code
+
+    @rx.event(background=True)
+    async def validate_and_apply_coupon(self):
+        """Validate and apply coupon discount"""
+        async with self:
+            coupon_code = self.applied_coupon_code
+        if not coupon_code:
+            yield rx.toast.error("Please enter a coupon code.")
+            return
+        async with rx.asession() as session:
+            result = await session.execute(
+                text("""SELECT * FROM discount_coupons 
+                       WHERE coupon_code = :code 
+                       AND is_active = TRUE 
+                       AND (valid_from IS NULL OR valid_from <= CURRENT_DATE)
+                       AND (valid_until IS NULL OR valid_until >= CURRENT_DATE)"""),
+                {"code": coupon_code.upper()},
+            )
+            coupon = result.mappings().first()
+        async with self:
+            if not coupon:
+                self.coupon_message = "Invalid or expired coupon"
+                yield rx.toast.error("Invalid or expired coupon")
+                return
+            if coupon["usage_limit"] and coupon["used_count"] >= coupon["usage_limit"]:
+                self.coupon_message = "Coupon usage limit reached"
+                yield rx.toast.error("Coupon usage limit reached")
+                return
+            if self.order_total_amount < coupon["min_order_value"]:
+                self.coupon_message = (
+                    f"Minimum order ₹{coupon['min_order_value']} required"
+                )
+                yield rx.toast.error(
+                    f"Minimum order value: ₹{coupon['min_order_value']}"
+                )
+                return
+            if coupon["discount_type"] == "percentage":
+                discount = self.order_total_amount * coupon["discount_value"] / 100
+            else:
+                discount = coupon["discount_value"]
+            self.applied_coupon_code = coupon_code.upper()
+            self.coupon_discount = float(discount)
+            self.coupon_message = f"Coupon applied! You saved ₹{discount:.2f}"
+        yield rx.toast.success(f"Coupon applied! Discount: ₹{discount:.2f}")
+
+    @rx.event
+    def remove_coupon(self):
+        """Remove applied coupon"""
+        self.applied_coupon_code = ""
+        self.coupon_discount = 0.0
+        self.coupon_message = ""
 
     @rx.var
     def filtered_orders(self) -> list[OrderWithCustomerName]:
@@ -119,6 +188,81 @@ ORDER BY o.order_date DESC""")
         self.neck = None
 
     @rx.event(background=True)
+    async def on_customer_selected(self, customer_id_str: str):
+        """Load customer's latest measurements when selected"""
+        if not customer_id_str:
+            return
+        customer_id = int(customer_id_str)
+        async with rx.asession() as session:
+            result = await session.execute(
+                text("""SELECT * FROM measurements 
+                   WHERE customer_id = :customer_id 
+                   ORDER BY measurement_date DESC LIMIT 1"""),
+                {"customer_id": customer_id},
+            )
+            latest = result.mappings().first()
+        async with self:
+            if latest:
+                self.chest = (
+                    float(latest.get("chest") or 0) if latest.get("chest") else None
+                )
+                self.waist = (
+                    float(latest.get("waist") or 0) if latest.get("waist") else None
+                )
+                self.hip = float(latest.get("hip") or 0) if latest.get("hip") else None
+                self.shoulder_width = (
+                    float(latest.get("shoulder_width") or 0)
+                    if latest.get("shoulder_width")
+                    else None
+                )
+                self.sleeve_length = (
+                    float(latest.get("sleeve_length") or 0)
+                    if latest.get("sleeve_length")
+                    else None
+                )
+                self.shirt_length = (
+                    float(latest.get("shirt_length") or 0)
+                    if latest.get("shirt_length")
+                    else None
+                )
+                self.pant_length = (
+                    float(latest.get("pant_length") or 0)
+                    if latest.get("pant_length")
+                    else None
+                )
+                self.inseam = (
+                    float(latest.get("inseam") or 0) if latest.get("inseam") else None
+                )
+                self.neck = (
+                    float(latest.get("neck") or 0) if latest.get("neck") else None
+                )
+                yield rx.toast.info("Previous measurements loaded!")
+            else:
+                self._reset_measurements()
+
+    @rx.event(background=True)
+    async def load_workers_with_workload(self):
+        """Load workers with their current workload"""
+        async with rx.asession() as session:
+            result = await session.execute(
+                text("""SELECT
+                    w.worker_id,
+                    w.worker_name,
+                    w.role,
+                    w.active_status,
+                    COUNT(o.order_id) as current_orders
+                FROM workers w
+                LEFT JOIN orders o ON w.worker_id = o.assigned_worker
+                    AND o.status NOT IN ('delivered', 'cancelled')
+                WHERE w.active_status = TRUE
+                GROUP BY w.worker_id, w.worker_name, w.role, w.active_status
+                ORDER BY current_orders ASC, w.worker_name""")
+            )
+            workers = [dict(row) for row in result.mappings().all()]
+        async with self:
+            self.workers_with_workload = workers
+
+    @rx.event(background=True)
     async def load_form_data(self):
         async with rx.asession() as session:
             customer_result = await session.execute(
@@ -131,6 +275,7 @@ ORDER BY o.order_date DESC""")
                     cast(Customer, dict(row))
                     for row in customer_result.mappings().all()
                 ]
+        yield OrderState.load_workers_with_workload
 
     @rx.event
     def on_cloth_type_changed(self, cloth_type: str):
@@ -143,6 +288,9 @@ ORDER BY o.order_date DESC""")
     @rx.event(background=True)
     async def handle_order_form_submit(self, form_data: dict):
         """Handle the submission of the order form for both add and edit."""
+        async with self:
+            if form_data.get("coupon_code"):
+                self.applied_coupon_code = form_data["coupon_code"]
         if self.is_editing_order:
             async with self:
                 self.show_order_form = False
@@ -161,11 +309,17 @@ ORDER BY o.order_date DESC""")
         advance_payment = float(form_data.get("advance_payment", 0))
         delivery_date = form_data.get("delivery_date") or None
         priority = self.order_priority
+        final_total = self.final_total_amount
+        balance = self.final_balance_payment
         async with rx.asession() as session:
             result = await session.execute(
-                text("""INSERT INTO orders (customer_id, order_date, delivery_date, status, cloth_type, quantity, total_amount, advance_payment, balance_payment, special_instructions, priority)
-                     VALUES (:customer_id, :order_date, :delivery_date, :status, :cloth_type, :quantity, :total_amount, :advance_payment, :balance_payment, :special_instructions, :priority)
-                     RETURNING order_id"""),
+                text("""INSERT INTO orders (customer_id, order_date, delivery_date, status, 
+            cloth_type, quantity, total_amount, advance_payment, balance_payment, 
+            special_instructions, priority, coupon_code, discount_amount, points_earned)
+         VALUES (:customer_id, :order_date, :delivery_date, :status, :cloth_type, 
+                 :quantity, :total_amount, :advance_payment, :balance_payment, 
+                 :special_instructions, :priority, :coupon_code, :discount_amount, :points_earned)
+         RETURNING order_id"""),
                 {
                     "customer_id": customer_id,
                     "order_date": datetime.date.today(),
@@ -175,12 +329,22 @@ ORDER BY o.order_date DESC""")
                     "quantity": int(form_data.get("quantity", 1)),
                     "total_amount": total_amount,
                     "advance_payment": advance_payment,
-                    "balance_payment": total_amount - advance_payment,
+                    "balance_payment": balance,
                     "special_instructions": form_data.get("special_instructions"),
                     "priority": priority,
+                    "coupon_code": self.applied_coupon_code or None,
+                    "discount_amount": self.coupon_discount,
+                    "points_earned": int(final_total / 100),
                 },
             )
             new_order_id = result.scalar_one()
+            if self.applied_coupon_code:
+                await session.execute(
+                    text(
+                        "UPDATE discount_coupons SET used_count = used_count + 1 WHERE coupon_code = :code"
+                    ),
+                    {"code": self.applied_coupon_code},
+                )
             await session.commit()
         customer = next(
             (c for c in self.available_customers if c["customer_id"] == customer_id),

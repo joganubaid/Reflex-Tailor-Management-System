@@ -5,11 +5,44 @@ from pathlib import Path
 from typing import Optional
 import mimetypes
 import reflex as rx
+import logging
 
 LOCAL_UPLOAD_DIR = Path("uploaded_photos")
 LOCAL_UPLOAD_DIR.mkdir(exist_ok=True)
 for subdir in ["orders", "customers", "materials", "measurements", "invoices"]:
     (LOCAL_UPLOAD_DIR / subdir).mkdir(exist_ok=True)
+
+
+def get_supabase_client():
+    """Get Supabase client with proper error handling"""
+    try:
+        from supabase import create_client
+
+        supabase_url = os.getenv("SUPABASE_URL")
+        supabase_key = os.getenv("SUPABASE_KEY")
+        if not supabase_url or not supabase_key:
+            logging.warning("Supabase credentials not configured")
+            return None
+        return create_client(supabase_url, supabase_key)
+    except Exception as e:
+        logging.exception(f"Failed to create Supabase client: {e}")
+        return None
+
+
+def ensure_bucket_exists(supabase, bucket_name: str = "tailor-shop-photos"):
+    """Create bucket if it doesn't exist and set it to public"""
+    try:
+        buckets = supabase.storage.list_buckets()
+        bucket_exists = any((b.name == bucket_name for b in buckets))
+        if not bucket_exists:
+            supabase.storage.create_bucket(bucket_name, options={"public": True})
+            logging.info(f"Created public bucket: {bucket_name}")
+        else:
+            logging.info(f"Bucket already exists: {bucket_name}")
+        return True
+    except Exception as e:
+        logging.exception(f"Error ensuring bucket exists: {e}")
+        return False
 
 
 def get_photo_subdirectory(photo_type: str) -> str:
@@ -67,6 +100,23 @@ def get_photo_url(file_path: str, storage_type: str = "local") -> str:
     )
 
 
+def delete_photo_from_supabase(
+    file_path: str, bucket_name: str = "tailor-shop-photos"
+) -> bool:
+    """Delete photo from Supabase Storage"""
+    try:
+        supabase = get_supabase_client()
+        if not supabase:
+            return False
+        filename = file_path.split("/")[-1]
+        supabase.storage.from_(bucket_name).remove([filename])
+        logging.info(f"Deleted from Supabase: {filename}")
+        return True
+    except Exception as e:
+        logging.exception(f"Failed to delete from Supabase: {e}")
+        return False
+
+
 def delete_photo_file(file_path: str, storage_type: str = "local") -> bool:
     """Delete photo file from storage."""
     try:
@@ -76,7 +126,7 @@ def delete_photo_file(file_path: str, storage_type: str = "local") -> bool:
                 full_path.unlink()
                 return True
         elif storage_type == "supabase":
-            pass
+            return delete_photo_from_supabase(file_path)
         return False
     except Exception as e:
         logging.exception(f"Error deleting photo: {e}")
@@ -87,26 +137,30 @@ def upload_to_supabase(
     file_data: bytes, filename: str, bucket_name: str = "tailor-shop-photos"
 ) -> Optional[str]:
     """
-    Upload photo to Supabase Storage.
+    Upload photo to Supabase Storage with proper bucket initialization.
     Returns the public URL if successful, None otherwise.
     """
     try:
-        from supabase import create_client
-
-        supabase_url = os.getenv("SUPABASE_URL")
-        supabase_key = os.getenv("SUPABASE_KEY")
-        if not supabase_url or not supabase_key:
-            print("Supabase credentials not configured")
+        supabase = get_supabase_client()
+        if not supabase:
+            logging.error("Supabase client not available")
             return None
-        supabase = create_client(supabase_url, supabase_key)
+        if not ensure_bucket_exists(supabase, bucket_name):
+            logging.error("Failed to ensure bucket exists")
+            return None
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        unique_filename = f"{timestamp}_{uuid.uuid4().hex[:8]}_{filename}"
         response = supabase.storage.from_(bucket_name).upload(
-            path=filename,
+            path=unique_filename,
             file=file_data,
             file_options={
-                "content-type": mimetypes.guess_type(filename)[0] or "image/jpeg"
+                "content-type": mimetypes.guess_type(filename)[0] or "image/jpeg",
+                "cache-control": "3600",
+                "upsert": "false",
             },
         )
-        public_url = supabase.storage.from_(bucket_name).get_public_url(filename)
+        public_url = supabase.storage.from_(bucket_name).get_public_url(unique_filename)
+        logging.info(f"Successfully uploaded to Supabase: {public_url}")
         return public_url
     except Exception as e:
         logging.exception(f"Supabase upload failed: {e}")

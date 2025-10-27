@@ -185,7 +185,10 @@ def order_form() -> rx.Component:
                             ),
                             name="customer_id",
                             value=OrderState.selected_customer_id,
-                            on_change=OrderState.set_selected_customer_id,
+                            on_change=[
+                                OrderState.set_selected_customer_id,
+                                lambda cid: OrderState.on_customer_selected(cid),
+                            ],
                             required=True,
                         ),
                     ),
@@ -235,6 +238,22 @@ def order_form() -> rx.Component:
                     ),
                     class_name="mb-4",
                 ),
+                rx.cond(
+                    OrderState.selected_customer_id != "",
+                    rx.cond(
+                        OrderState.chest != None,
+                        rx.el.div(
+                            rx.icon("info", class_name="h-4 w-4 mr-2 text-blue-500"),
+                            rx.el.span(
+                                "Previous measurements loaded. Update as needed.",
+                                class_name="text-sm text-blue-600",
+                            ),
+                            class_name="flex items-center p-2 bg-blue-50 rounded-lg mb-4",
+                        ),
+                        rx.fragment(),
+                    ),
+                    rx.fragment(),
+                ),
                 measurement_fields(),
                 rx.el.div(
                     _form_label("Special Instructions (Optional)"),
@@ -276,18 +295,76 @@ def order_form() -> rx.Component:
                             ),
                         ),
                         rx.el.div(
-                            _form_label("Balance"),
+                            _form_label("Final Total (After Discount)"),
                             _form_input(
-                                name="balance_payment",
-                                type="number",
-                                value=OrderState.order_balance_payment,
+                                value=OrderState.final_total_amount.to_string(),
+                                is_read_only=True,
+                                class_name="w-full p-3 bg-purple-50 border-2 border-purple-500 rounded-lg font-bold text-purple-700",
+                            ),
+                        ),
+                        rx.el.div(
+                            _form_label("Balance to Pay"),
+                            _form_input(
+                                value=OrderState.final_balance_payment.to_string(),
                                 is_read_only=True,
                                 class_name="w-full p-3 bg-gray-100 border border-gray-200 rounded-lg",
                             ),
                         ),
-                        class_name="grid grid-cols-3 gap-4",
+                        class_name="grid grid-cols-2 md:grid-cols-4 gap-4",
                     ),
                     class_name="mb-6",
+                ),
+                rx.el.div(
+                    rx.el.label(
+                        "Promo Code (Optional)",
+                        class_name="block text-sm font-semibold text-gray-700 mb-2",
+                    ),
+                    rx.el.div(
+                        rx.el.input(
+                            placeholder="Enter coupon code",
+                            name="coupon_code",
+                            default_value=OrderState.applied_coupon_code,
+                            class_name="flex-1 p-3 bg-white border border-gray-200 rounded-lg uppercase",
+                        ),
+                        rx.el.button(
+                            "Apply",
+                            type="button",
+                            on_click=OrderState.validate_and_apply_coupon,
+                            class_name="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-semibold",
+                        ),
+                        rx.cond(
+                            OrderState.applied_coupon_code != "",
+                            rx.el.button(
+                                rx.icon("x", class_name="h-4 w-4"),
+                                type="button",
+                                on_click=OrderState.remove_coupon,
+                                class_name="px-3 py-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200",
+                            ),
+                            rx.fragment(),
+                        ),
+                        class_name="flex items-center gap-2",
+                    ),
+                    rx.cond(
+                        OrderState.coupon_message != "",
+                        rx.el.p(
+                            OrderState.coupon_message,
+                            class_name="text-sm text-green-600 mt-1",
+                        ),
+                        rx.fragment(),
+                    ),
+                    rx.cond(
+                        OrderState.coupon_discount > 0,
+                        rx.el.div(
+                            rx.el.span("Discount:", class_name="text-gray-600"),
+                            rx.el.span(
+                                f"-₹{OrderState.coupon_discount.to_string()}",
+                                class_name="text-green-600 font-bold",
+                            ),
+                            class_name="flex justify-between mt-2 p-2 bg-green-50 rounded",
+                        ),
+                        rx.fragment(),
+                    ),
+                    class_name="mb-6 p-4 bg-gray-50 rounded-lg",
                 ),
                 rx.el.div(
                     rx.dialog.close(
