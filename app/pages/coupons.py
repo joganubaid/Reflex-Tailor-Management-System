@@ -1,6 +1,6 @@
 import reflex as rx
 from app.states.coupon_state import CouponState
-from app.components.sidebar import sidebar
+from app.components.sidebar import sidebar, mobile_header
 from app.components.coupon_form import coupon_form, delete_coupon_dialog
 import datetime
 
@@ -127,131 +127,137 @@ def coupon_row(coupon: rx.Var[dict]) -> rx.Component:
 def coupons_page() -> rx.Component:
     return rx.el.div(
         sidebar(),
-        rx.el.main(
-            rx.el.div(
-                rx.el.h1(
-                    "Coupon Management", class_name="text-3xl font-bold text-gray-800"
-                ),
-                rx.el.p(
-                    "Create and manage discount coupons for your customers.",
-                    class_name="text-gray-500 mt-1",
-                ),
-                class_name="mb-8",
-            ),
-            rx.el.div(
-                metric_card(
-                    "ticket",
-                    "Total Coupons",
-                    CouponState.coupons.length().to_string(),
-                    "bg-blue-500",
-                ),
-                metric_card(
-                    "check_check",
-                    "Active Coupons",
-                    CouponState.active_coupons_count.to_string(),
-                    "bg-green-500",
-                ),
-                metric_card(
-                    "hand-coins",
-                    "Total Redemptions",
-                    CouponState.total_redemptions.to_string(),
-                    "bg-purple-500",
-                ),
-                metric_card(
-                    "circle_percent",
-                    "Avg. % Discount",
-                    CouponState.avg_discount_value.to_string() + "%",
-                    "bg-orange-500",
-                ),
-                class_name="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8",
-            ),
-            rx.el.div(
+        rx.el.div(
+            mobile_header(),
+            rx.el.main(
                 rx.el.div(
-                    rx.icon(
-                        "search",
-                        class_name="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400",
+                    rx.el.h1(
+                        "Coupon Management",
+                        class_name="text-3xl font-bold text-gray-800",
                     ),
-                    rx.el.input(
-                        placeholder="Search by coupon code...",
-                        on_change=CouponState.set_search_query,
-                        class_name="w-full md:w-80 pl-10 pr-4 py-2 border rounded-lg focus:ring-purple-500 focus:border-purple-500",
-                        default_value=CouponState.search_query,
+                    rx.el.p(
+                        "Create and manage discount coupons for your customers.",
+                        class_name="text-gray-500 mt-1",
                     ),
-                    class_name="relative",
+                    class_name="mb-8",
                 ),
-                rx.el.button(
-                    rx.icon("plus", class_name="mr-2 h-5 w-5"),
-                    "Create Coupon",
-                    on_click=CouponState.toggle_form,
-                    class_name="flex items-center bg-purple-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-purple-700 transition-colors",
-                ),
-                class_name="flex justify-between items-center mb-6",
-            ),
-            rx.el.div(
                 rx.el.div(
-                    rx.el.table(
-                        rx.el.thead(
-                            rx.el.tr(
-                                rx.el.th(
-                                    "Code",
-                                    class_name="px-6 py-3 text-left text-xs font-bold uppercase",
-                                ),
-                                rx.el.th(
-                                    "Discount",
-                                    class_name="px-6 py-3 text-left text-xs font-bold uppercase",
-                                ),
-                                rx.el.th(
-                                    "Min Order",
-                                    class_name="px-6 py-3 text-left text-xs font-bold uppercase",
-                                ),
-                                rx.el.th(
-                                    "Valid Period",
-                                    class_name="px-6 py-3 text-left text-xs font-bold uppercase",
-                                ),
-                                rx.el.th(
-                                    "Usage",
-                                    class_name="px-6 py-3 text-left text-xs font-bold uppercase",
-                                ),
-                                rx.el.th(
-                                    "Status",
-                                    class_name="px-6 py-3 text-left text-xs font-bold uppercase",
-                                ),
-                                rx.el.th(
-                                    "Actions",
-                                    class_name="px-6 py-3 text-center text-xs font-bold uppercase",
-                                ),
-                            )
-                        ),
-                        rx.el.tbody(
-                            rx.foreach(CouponState.filtered_coupons, coupon_row)
-                        ),
-                        class_name="min-w-full divide-y divide-gray-200",
+                    metric_card(
+                        "ticket",
+                        "Total Coupons",
+                        CouponState.coupons.length().to_string(),
+                        "bg-blue-500",
                     ),
-                    rx.cond(
-                        CouponState.filtered_coupons.length() == 0,
-                        rx.el.div(
-                            rx.icon(
-                                "ticket-slash",
-                                class_name="h-12 w-12 text-gray-400 mb-4",
-                            ),
-                            rx.el.h3(
-                                "No Coupons Found", class_name="text-lg font-semibold"
-                            ),
-                            rx.el.p(
-                                "Create your first coupon to get started.",
-                                class_name="text-gray-500 mt-1",
-                            ),
-                            class_name="text-center py-16",
-                        ),
-                        None,
+                    metric_card(
+                        "check_check",
+                        "Active Coupons",
+                        CouponState.active_coupons_count.to_string(),
+                        "bg-green-500",
                     ),
-                    class_name="overflow-x-auto border border-gray-200 rounded-xl",
+                    metric_card(
+                        "hand-coins",
+                        "Total Redemptions",
+                        CouponState.total_redemptions.to_string(),
+                        "bg-purple-500",
+                    ),
+                    metric_card(
+                        "circle_percent",
+                        "Avg. % Discount",
+                        CouponState.avg_discount_value.to_string() + "%",
+                        "bg-orange-500",
+                    ),
+                    class_name="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8",
                 ),
-                class_name="bg-white p-6 rounded-xl shadow-sm",
+                rx.el.div(
+                    rx.el.div(
+                        rx.icon(
+                            "search",
+                            class_name="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400",
+                        ),
+                        rx.el.input(
+                            placeholder="Search by coupon code...",
+                            on_change=CouponState.set_search_query,
+                            class_name="w-full md:w-80 pl-10 pr-4 py-2 border rounded-lg focus:ring-purple-500 focus:border-purple-500",
+                            default_value=CouponState.search_query,
+                        ),
+                        class_name="relative",
+                    ),
+                    rx.el.button(
+                        rx.icon("plus", class_name="mr-2 h-5 w-5"),
+                        "Create Coupon",
+                        on_click=CouponState.toggle_form,
+                        class_name="flex items-center bg-purple-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-purple-700 transition-colors",
+                    ),
+                    class_name="flex justify-between items-center mb-6",
+                ),
+                rx.el.div(
+                    rx.el.div(
+                        rx.el.table(
+                            rx.el.thead(
+                                rx.el.tr(
+                                    rx.el.th(
+                                        "Code",
+                                        class_name="px-6 py-3 text-left text-xs font-bold uppercase",
+                                    ),
+                                    rx.el.th(
+                                        "Discount",
+                                        class_name="px-6 py-3 text-left text-xs font-bold uppercase",
+                                    ),
+                                    rx.el.th(
+                                        "Min Order",
+                                        class_name="px-6 py-3 text-left text-xs font-bold uppercase",
+                                    ),
+                                    rx.el.th(
+                                        "Valid Period",
+                                        class_name="px-6 py-3 text-left text-xs font-bold uppercase",
+                                    ),
+                                    rx.el.th(
+                                        "Usage",
+                                        class_name="px-6 py-3 text-left text-xs font-bold uppercase",
+                                    ),
+                                    rx.el.th(
+                                        "Status",
+                                        class_name="px-6 py-3 text-left text-xs font-bold uppercase",
+                                    ),
+                                    rx.el.th(
+                                        "Actions",
+                                        class_name="px-6 py-3 text-center text-xs font-bold uppercase",
+                                    ),
+                                )
+                            ),
+                            rx.el.tbody(
+                                rx.foreach(CouponState.filtered_coupons, coupon_row)
+                            ),
+                            class_name="min-w-full divide-y divide-gray-200",
+                        ),
+                        rx.cond(
+                            CouponState.filtered_coupons.length() == 0,
+                            rx.el.div(
+                                rx.icon(
+                                    "ticket-slash",
+                                    class_name="h-12 w-12 text-gray-400 mb-4",
+                                ),
+                                rx.el.h3(
+                                    "No Coupons Found",
+                                    class_name="text-lg font-semibold",
+                                ),
+                                rx.el.p(
+                                    "Create your first coupon to get started.",
+                                    class_name="text-gray-500 mt-1",
+                                ),
+                                class_name="text-center py-16",
+                            ),
+                            None,
+                        ),
+                        class_name="overflow-x-auto border border-gray-200 rounded-xl",
+                    ),
+                    class_name="bg-white p-6 rounded-xl shadow-sm",
+                ),
+                coupon_form(),
+                delete_coupon_dialog(),
+                class_name="flex-1 p-4 md:p-8 overflow-auto",
             ),
-            coupon_form(),
-            delete_coupon_dialog(),
-            class_name="flex-1 p-6 md:p-8 overflow-auto",
+            class_name="flex flex-col w-full",
         ),
         class_name="flex min-h-screen w-full bg-gray-50 font-['Lato']",
     )

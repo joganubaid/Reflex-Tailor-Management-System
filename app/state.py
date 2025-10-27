@@ -669,9 +669,3 @@ class MaterialState(BaseState):
         else:
             self.show_delete_dialog = False
             yield rx.toast.error("No material selected for deletion.")
-
-
-class SidebarState(BaseState):
-    """State for the sidebar component."""
-
-    pass

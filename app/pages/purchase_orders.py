@@ -1,6 +1,6 @@
 import reflex as rx
 from app.states.purchase_order_state import PurchaseOrderState, PurchaseOrderItem
-from app.components.sidebar import sidebar
+from app.components.sidebar import sidebar, mobile_header
 
 STATUS_COLORS = {
     "pending": "bg-yellow-100 text-yellow-800",
@@ -207,87 +207,92 @@ def po_form() -> rx.Component:
 def purchase_orders_page() -> rx.Component:
     return rx.el.div(
         sidebar(),
-        rx.el.main(
-            rx.el.div(
-                rx.el.h1(
-                    "Purchase Orders", class_name="text-3xl font-bold text-gray-800"
-                ),
-                rx.el.p(
-                    "Manage procurement of materials from suppliers.",
-                    class_name="text-gray-500 mt-1",
-                ),
-                class_name="mb-8",
-            ),
-            rx.el.div(
-                rx.el.div(class_name="flex-1"),
-                rx.el.button(
-                    rx.icon("plus", class_name="mr-2 h-5 w-5"),
-                    "Create PO",
-                    on_click=PurchaseOrderState.toggle_po_form,
-                    class_name="flex items-center bg-purple-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-purple-700",
-                ),
-                class_name="flex justify-between items-center mb-6",
-            ),
-            rx.el.div(
+        rx.el.div(
+            mobile_header(),
+            rx.el.main(
                 rx.el.div(
-                    rx.el.table(
-                        rx.el.thead(
-                            rx.el.tr(
-                                rx.el.th(
-                                    "PO ID",
-                                    class_name="px-6 py-3 text-left text-xs font-bold uppercase",
-                                ),
-                                rx.el.th(
-                                    "Supplier",
-                                    class_name="px-6 py-3 text-left text-xs font-bold uppercase",
-                                ),
-                                rx.el.th(
-                                    "Order Date",
-                                    class_name="px-6 py-3 text-left text-xs font-bold uppercase",
-                                ),
-                                rx.el.th(
-                                    "Status",
-                                    class_name="px-6 py-3 text-left text-xs font-bold uppercase",
-                                ),
-                                rx.el.th(
-                                    "Total",
-                                    class_name="px-6 py-3 text-left text-xs font-bold uppercase",
-                                ),
-                                rx.el.th(
-                                    "Actions",
-                                    class_name="px-6 py-3 text-center text-xs font-bold uppercase",
-                                ),
-                            )
-                        ),
-                        rx.el.tbody(
-                            rx.foreach(PurchaseOrderState.purchase_orders, po_row)
-                        ),
-                        class_name="min-w-full divide-y divide-gray-200",
+                    rx.el.h1(
+                        "Purchase Orders", class_name="text-3xl font-bold text-gray-800"
                     ),
-                    rx.cond(
-                        PurchaseOrderState.purchase_orders.length() == 0,
-                        rx.el.div(
-                            rx.icon(
-                                "file-stack", class_name="h-12 w-12 text-gray-400 mb-4"
-                            ),
-                            rx.el.h3(
-                                "No Purchase Orders Found",
-                                class_name="text-lg font-semibold",
-                            ),
-                            rx.el.p(
-                                "Create your first purchase order to start restocking.",
-                                class_name="text-gray-500 mt-1",
-                            ),
-                            class_name="text-center py-16",
-                        ),
-                        None,
+                    rx.el.p(
+                        "Manage procurement of materials from suppliers.",
+                        class_name="text-gray-500 mt-1",
                     ),
-                    class_name="overflow-hidden border border-gray-200 rounded-xl",
+                    class_name="mb-8",
                 ),
-                class_name="bg-white p-6 rounded-xl shadow-sm",
+                rx.el.div(
+                    rx.el.div(class_name="flex-1"),
+                    rx.el.button(
+                        rx.icon("plus", class_name="mr-2 h-5 w-5"),
+                        "Create PO",
+                        on_click=PurchaseOrderState.toggle_po_form,
+                        class_name="flex items-center bg-purple-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-purple-700",
+                    ),
+                    class_name="flex justify-between items-center mb-6",
+                ),
+                rx.el.div(
+                    rx.el.div(
+                        rx.el.table(
+                            rx.el.thead(
+                                rx.el.tr(
+                                    rx.el.th(
+                                        "PO ID",
+                                        class_name="px-6 py-3 text-left text-xs font-bold uppercase",
+                                    ),
+                                    rx.el.th(
+                                        "Supplier",
+                                        class_name="px-6 py-3 text-left text-xs font-bold uppercase",
+                                    ),
+                                    rx.el.th(
+                                        "Order Date",
+                                        class_name="px-6 py-3 text-left text-xs font-bold uppercase",
+                                    ),
+                                    rx.el.th(
+                                        "Status",
+                                        class_name="px-6 py-3 text-left text-xs font-bold uppercase",
+                                    ),
+                                    rx.el.th(
+                                        "Total",
+                                        class_name="px-6 py-3 text-left text-xs font-bold uppercase",
+                                    ),
+                                    rx.el.th(
+                                        "Actions",
+                                        class_name="px-6 py-3 text-center text-xs font-bold uppercase",
+                                    ),
+                                )
+                            ),
+                            rx.el.tbody(
+                                rx.foreach(PurchaseOrderState.purchase_orders, po_row)
+                            ),
+                            class_name="min-w-full divide-y divide-gray-200",
+                        ),
+                        rx.cond(
+                            PurchaseOrderState.purchase_orders.length() == 0,
+                            rx.el.div(
+                                rx.icon(
+                                    "file-stack",
+                                    class_name="h-12 w-12 text-gray-400 mb-4",
+                                ),
+                                rx.el.h3(
+                                    "No Purchase Orders Found",
+                                    class_name="text-lg font-semibold",
+                                ),
+                                rx.el.p(
+                                    "Create your first purchase order to start restocking.",
+                                    class_name="text-gray-500 mt-1",
+                                ),
+                                class_name="text-center py-16",
+                            ),
+                            None,
+                        ),
+                        class_name="overflow-hidden border border-gray-200 rounded-xl",
+                    ),
+                    class_name="bg-white p-6 rounded-xl shadow-sm",
+                ),
+                po_form(),
+                class_name="flex-1 p-4 md:p-8 overflow-auto",
             ),
-            po_form(),
-            class_name="flex-1 p-6 md:p-8 overflow-auto",
+            class_name="flex flex-col w-full",
         ),
         class_name="flex min-h-screen w-full bg-gray-50 font-['Lato']",
     )

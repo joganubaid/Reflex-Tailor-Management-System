@@ -1,6 +1,6 @@
 import reflex as rx
 from app.states.expense_state import ExpenseState
-from app.components.sidebar import sidebar
+from app.components.sidebar import sidebar, mobile_header
 
 
 def expense_form() -> rx.Component:
@@ -139,98 +139,103 @@ def expense_row(expense: rx.Var[dict]) -> rx.Component:
 def expenses_page() -> rx.Component:
     return rx.el.div(
         sidebar(),
-        rx.el.main(
-            rx.el.div(
-                rx.el.h1(
-                    "Expense Tracking", class_name="text-3xl font-bold text-gray-800"
-                ),
-                rx.el.p(
-                    "Record and manage all your business expenses.",
-                    class_name="text-gray-500 mt-1",
-                ),
-                class_name="mb-8",
-            ),
-            rx.el.div(
+        rx.el.div(
+            mobile_header(),
+            rx.el.main(
                 rx.el.div(
-                    rx.icon(
-                        "search",
-                        class_name="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400",
+                    rx.el.h1(
+                        "Expense Tracking",
+                        class_name="text-3xl font-bold text-gray-800",
                     ),
-                    rx.el.input(
-                        placeholder="Search expenses...",
-                        on_change=ExpenseState.set_search_query,
-                        class_name="w-full md:w-80 pl-10 pr-4 py-2 border rounded-lg",
+                    rx.el.p(
+                        "Record and manage all your business expenses.",
+                        class_name="text-gray-500 mt-1",
                     ),
-                    class_name="relative",
+                    class_name="mb-8",
                 ),
                 rx.el.div(
-                    rx.el.span("Total Expenses:", class_name="font-semibold"),
-                    rx.el.span(
-                        f"₹{ExpenseState.total_expenses.to_string()}",
-                        class_name="font-bold text-red-600 text-lg",
+                    rx.el.div(
+                        rx.icon(
+                            "search",
+                            class_name="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400",
+                        ),
+                        rx.el.input(
+                            placeholder="Search expenses...",
+                            on_change=ExpenseState.set_search_query,
+                            class_name="w-full md:w-80 pl-10 pr-4 py-2 border rounded-lg",
+                        ),
+                        class_name="relative",
                     ),
-                    class_name="flex items-center gap-2 bg-red-50 p-2 rounded-lg",
+                    rx.el.div(
+                        rx.el.span("Total Expenses:", class_name="font-semibold"),
+                        rx.el.span(
+                            f"₹{ExpenseState.total_expenses.to_string()}",
+                            class_name="font-bold text-red-600 text-lg",
+                        ),
+                        class_name="flex items-center gap-2 bg-red-50 p-2 rounded-lg",
+                    ),
+                    rx.el.button(
+                        rx.icon("plus", class_name="mr-2 h-5 w-5"),
+                        "Add Expense",
+                        on_click=ExpenseState.toggle_form,
+                        class_name="flex items-center bg-purple-600 text-white px-4 py-2 rounded-lg font-semibold",
+                    ),
+                    class_name="flex justify-between items-center mb-6",
                 ),
-                rx.el.button(
-                    rx.icon("plus", class_name="mr-2 h-5 w-5"),
-                    "Add Expense",
-                    on_click=ExpenseState.toggle_form,
-                    class_name="flex items-center bg-purple-600 text-white px-4 py-2 rounded-lg font-semibold",
-                ),
-                class_name="flex justify-between items-center mb-6",
-            ),
-            rx.el.div(
                 rx.el.div(
-                    rx.el.table(
-                        rx.el.thead(
-                            rx.el.tr(
-                                rx.el.th(
-                                    "Date",
-                                    class_name="px-6 py-3 text-left text-xs font-bold uppercase",
-                                ),
-                                rx.el.th(
-                                    "Category",
-                                    class_name="px-6 py-3 text-left text-xs font-bold uppercase",
-                                ),
-                                rx.el.th(
-                                    "Description",
-                                    class_name="px-6 py-3 text-left text-xs font-bold uppercase",
-                                ),
-                                rx.el.th(
-                                    "Amount",
-                                    class_name="px-6 py-3 text-left text-xs font-bold uppercase",
-                                ),
-                                rx.el.th(
-                                    "Vendor",
-                                    class_name="px-6 py-3 text-left text-xs font-bold uppercase",
-                                ),
-                                rx.el.th(
-                                    "Action",
-                                    class_name="px-6 py-3 text-center text-xs font-bold uppercase",
-                                ),
-                            )
+                    rx.el.div(
+                        rx.el.table(
+                            rx.el.thead(
+                                rx.el.tr(
+                                    rx.el.th(
+                                        "Date",
+                                        class_name="px-6 py-3 text-left text-xs font-bold uppercase",
+                                    ),
+                                    rx.el.th(
+                                        "Category",
+                                        class_name="px-6 py-3 text-left text-xs font-bold uppercase",
+                                    ),
+                                    rx.el.th(
+                                        "Description",
+                                        class_name="px-6 py-3 text-left text-xs font-bold uppercase",
+                                    ),
+                                    rx.el.th(
+                                        "Amount",
+                                        class_name="px-6 py-3 text-left text-xs font-bold uppercase",
+                                    ),
+                                    rx.el.th(
+                                        "Vendor",
+                                        class_name="px-6 py-3 text-left text-xs font-bold uppercase",
+                                    ),
+                                    rx.el.th(
+                                        "Action",
+                                        class_name="px-6 py-3 text-center text-xs font-bold uppercase",
+                                    ),
+                                )
+                            ),
+                            rx.el.tbody(
+                                rx.foreach(ExpenseState.filtered_expenses, expense_row)
+                            ),
+                            class_name="min-w-full divide-y divide-gray-200",
                         ),
-                        rx.el.tbody(
-                            rx.foreach(ExpenseState.filtered_expenses, expense_row)
+                        rx.cond(
+                            ExpenseState.filtered_expenses.length() == 0,
+                            rx.el.div(
+                                rx.el.p(
+                                    "No expenses recorded yet.",
+                                    class_name="text-center text-gray-500 py-8",
+                                )
+                            ),
+                            None,
                         ),
-                        class_name="min-w-full divide-y divide-gray-200",
+                        class_name="overflow-hidden border border-gray-200 rounded-xl",
                     ),
-                    rx.cond(
-                        ExpenseState.filtered_expenses.length() == 0,
-                        rx.el.div(
-                            rx.el.p(
-                                "No expenses recorded yet.",
-                                class_name="text-center text-gray-500 py-8",
-                            )
-                        ),
-                        None,
-                    ),
-                    class_name="overflow-hidden border border-gray-200 rounded-xl",
+                    class_name="bg-white p-6 rounded-xl shadow-sm",
                 ),
-                class_name="bg-white p-6 rounded-xl shadow-sm",
+                expense_form(),
+                class_name="flex-1 p-4 md:p-8 overflow-auto",
             ),
-            expense_form(),
-            class_name="flex-1 p-6 md:p-8 overflow-auto",
+            class_name="flex flex-col w-full",
         ),
         class_name="flex min-h-screen w-full bg-gray-50 font-['Lato']",
     )

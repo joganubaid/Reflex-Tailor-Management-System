@@ -143,102 +143,110 @@ def edit_alert_dialog() -> rx.Component:
     )
 
 
+from app.components.sidebar import mobile_header
+
+
 def alerts_page() -> rx.Component:
     return rx.el.div(
         sidebar(),
-        rx.el.main(
-            rx.el.div(
-                rx.el.h1(
-                    "Alerts & Automation", class_name="text-3xl font-bold text-gray-800"
-                ),
-                rx.el.p(
-                    "Configure smart alerts and view system notifications.",
-                    class_name="text-gray-500 mt-1",
-                ),
-                class_name="mb-8",
-            ),
-            rx.el.div(
-                rx.el.h2(
-                    "Alert Settings",
-                    class_name="text-xl font-semibold text-gray-700 mb-4",
+        rx.el.div(
+            mobile_header(),
+            rx.el.main(
+                rx.el.div(
+                    rx.el.h1(
+                        "Alerts & Automation",
+                        class_name="text-3xl font-bold text-gray-800",
+                    ),
+                    rx.el.p(
+                        "Configure smart alerts and view system notifications.",
+                        class_name="text-gray-500 mt-1",
+                    ),
+                    class_name="mb-8",
                 ),
                 rx.el.div(
-                    rx.el.table(
-                        rx.el.thead(
-                            rx.el.tr(
-                                rx.el.th(
-                                    "Alert Type",
-                                    class_name="px-6 py-3 text-left text-xs font-bold uppercase",
-                                ),
-                                rx.el.th(
-                                    "Status",
-                                    class_name="px-6 py-3 text-left text-xs font-bold uppercase",
-                                ),
-                                rx.el.th(
-                                    "Threshold",
-                                    class_name="px-6 py-3 text-left text-xs font-bold uppercase",
-                                ),
-                                rx.el.th(
-                                    "Method",
-                                    class_name="px-6 py-3 text-left text-xs font-bold uppercase",
-                                ),
-                                rx.el.th(
-                                    "Recipients",
-                                    class_name="px-6 py-3 text-left text-xs font-bold uppercase",
-                                ),
-                                rx.el.th(
-                                    "Action",
-                                    class_name="px-6 py-3 text-center text-xs font-bold uppercase",
-                                ),
-                            )
-                        ),
-                        rx.el.tbody(
-                            rx.foreach(AlertState.alert_settings, alert_setting_row)
-                        ),
-                        class_name="min-w-full divide-y divide-gray-200",
+                    rx.el.h2(
+                        "Alert Settings",
+                        class_name="text-xl font-semibold text-gray-700 mb-4",
                     ),
-                    class_name="overflow-hidden border border-gray-200 rounded-xl",
-                ),
-                class_name="bg-white p-6 rounded-xl shadow-sm mb-8",
-            ),
-            rx.el.div(
-                rx.el.h2(
-                    "Alert History",
-                    class_name="text-xl font-semibold text-gray-700 mb-4",
+                    rx.el.div(
+                        rx.el.table(
+                            rx.el.thead(
+                                rx.el.tr(
+                                    rx.el.th(
+                                        "Alert Type",
+                                        class_name="px-6 py-3 text-left text-xs font-bold uppercase",
+                                    ),
+                                    rx.el.th(
+                                        "Status",
+                                        class_name="px-6 py-3 text-left text-xs font-bold uppercase",
+                                    ),
+                                    rx.el.th(
+                                        "Threshold",
+                                        class_name="px-6 py-3 text-left text-xs font-bold uppercase",
+                                    ),
+                                    rx.el.th(
+                                        "Method",
+                                        class_name="px-6 py-3 text-left text-xs font-bold uppercase",
+                                    ),
+                                    rx.el.th(
+                                        "Recipients",
+                                        class_name="px-6 py-3 text-left text-xs font-bold uppercase",
+                                    ),
+                                    rx.el.th(
+                                        "Action",
+                                        class_name="px-6 py-3 text-center text-xs font-bold uppercase",
+                                    ),
+                                )
+                            ),
+                            rx.el.tbody(
+                                rx.foreach(AlertState.alert_settings, alert_setting_row)
+                            ),
+                            class_name="min-w-full divide-y divide-gray-200",
+                        ),
+                        class_name="overflow-hidden border border-gray-200 rounded-xl",
+                    ),
+                    class_name="bg-white p-6 rounded-xl shadow-sm mb-8",
                 ),
                 rx.el.div(
-                    rx.el.table(
-                        rx.el.thead(
-                            rx.el.tr(
-                                rx.el.th(
-                                    "Alert Type",
-                                    class_name="px-6 py-3 text-left text-xs font-bold uppercase",
-                                ),
-                                rx.el.th(
-                                    "Message",
-                                    class_name="px-6 py-3 text-left text-xs font-bold uppercase",
-                                ),
-                                rx.el.th(
-                                    "Severity",
-                                    class_name="px-6 py-3 text-left text-xs font-bold uppercase",
-                                ),
-                                rx.el.th(
-                                    "Triggered At",
-                                    class_name="px-6 py-3 text-left text-xs font-bold uppercase",
-                                ),
-                            )
-                        ),
-                        rx.el.tbody(
-                            rx.foreach(AlertState.alert_history, alert_history_row)
-                        ),
-                        class_name="min-w-full divide-y divide-gray-200",
+                    rx.el.h2(
+                        "Alert History",
+                        class_name="text-xl font-semibold text-gray-700 mb-4",
                     ),
-                    class_name="overflow-hidden border border-gray-200 rounded-xl",
+                    rx.el.div(
+                        rx.el.table(
+                            rx.el.thead(
+                                rx.el.tr(
+                                    rx.el.th(
+                                        "Alert Type",
+                                        class_name="px-6 py-3 text-left text-xs font-bold uppercase",
+                                    ),
+                                    rx.el.th(
+                                        "Message",
+                                        class_name="px-6 py-3 text-left text-xs font-bold uppercase",
+                                    ),
+                                    rx.el.th(
+                                        "Severity",
+                                        class_name="px-6 py-3 text-left text-xs font-bold uppercase",
+                                    ),
+                                    rx.el.th(
+                                        "Triggered At",
+                                        class_name="px-6 py-3 text-left text-xs font-bold uppercase",
+                                    ),
+                                )
+                            ),
+                            rx.el.tbody(
+                                rx.foreach(AlertState.alert_history, alert_history_row)
+                            ),
+                            class_name="min-w-full divide-y divide-gray-200",
+                        ),
+                        class_name="overflow-hidden border border-gray-200 rounded-xl",
+                    ),
+                    class_name="bg-white p-6 rounded-xl shadow-sm",
                 ),
-                class_name="bg-white p-6 rounded-xl shadow-sm",
+                edit_alert_dialog(),
+                class_name="flex-1 p-4 md:p-8 overflow-auto",
             ),
-            edit_alert_dialog(),
-            class_name="flex-1 p-6 md:p-8 overflow-auto",
+            class_name="flex flex-col w-full",
         ),
         class_name="flex min-h-screen w-full bg-gray-50 font-['Lato']",
     )

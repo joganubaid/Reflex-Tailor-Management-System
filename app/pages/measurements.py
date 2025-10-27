@@ -1,6 +1,6 @@
 import reflex as rx
 from app.states.measurement_state import MeasurementState
-from app.components.sidebar import sidebar
+from app.components.sidebar import sidebar, mobile_header
 
 
 def _form_label(text: str) -> rx.Component:
@@ -208,112 +208,122 @@ def measurement_row(measurement: rx.Var[dict]) -> rx.Component:
 def measurements_page() -> rx.Component:
     return rx.el.div(
         sidebar(),
-        rx.el.main(
-            rx.el.div(
-                rx.el.h1("Measurements", class_name="text-3xl font-bold text-gray-800"),
-                rx.el.p(
-                    "Manage all customer measurements.", class_name="text-gray-500 mt-1"
-                ),
-                class_name="mb-8",
-            ),
-            rx.el.div(
+        rx.el.div(
+            mobile_header(),
+            rx.el.main(
                 rx.el.div(
-                    rx.icon(
-                        "search",
-                        class_name="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400",
+                    rx.el.h1(
+                        "Measurements", class_name="text-3xl font-bold text-gray-800"
                     ),
-                    rx.el.input(
-                        placeholder="Search by customer or cloth type...",
-                        on_change=MeasurementState.set_search_query,
-                        class_name="w-full md:w-80 pl-10 pr-4 py-2 border rounded-lg focus:ring-purple-500 focus:border-purple-500",
-                        default_value=MeasurementState.search_query,
+                    rx.el.p(
+                        "Manage all customer measurements.",
+                        class_name="text-gray-500 mt-1",
                     ),
-                    class_name="relative",
+                    class_name="mb-8",
                 ),
-                rx.el.button(
-                    rx.icon("plus", class_name="mr-2 h-5 w-5"),
-                    "Add Measurement",
-                    on_click=MeasurementState.toggle_form,
-                    class_name="flex items-center bg-purple-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-purple-700 transition-colors",
-                ),
-                class_name="flex justify-between items-center mb-6",
-            ),
-            rx.el.div(
                 rx.el.div(
-                    rx.el.table(
-                        rx.el.thead(
-                            rx.el.tr(
-                                rx.el.th(
-                                    "Customer",
-                                    scope="col",
-                                    class_name="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider",
-                                ),
-                                rx.el.th(
-                                    "Cloth Type",
-                                    scope="col",
-                                    class_name="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider",
-                                ),
-                                rx.el.th(
-                                    "Chest",
-                                    scope="col",
-                                    class_name="px-6 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider",
-                                ),
-                                rx.el.th(
-                                    "Waist",
-                                    scope="col",
-                                    class_name="px-6 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider",
-                                ),
-                                rx.el.th(
-                                    "Hip",
-                                    scope="col",
-                                    class_name="px-6 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider",
-                                ),
-                                rx.el.th(
-                                    "Shoulder",
-                                    scope="col",
-                                    class_name="px-6 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider",
-                                ),
-                                rx.el.th(
-                                    "Sleeve",
-                                    scope="col",
-                                    class_name="px-6 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider",
-                                ),
-                                rx.el.th(
-                                    "Actions",
-                                    scope="col",
-                                    class_name="px-6 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider",
-                                ),
-                            )
+                    rx.el.div(
+                        rx.icon(
+                            "search",
+                            class_name="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400",
                         ),
-                        rx.el.tbody(
-                            rx.foreach(
-                                MeasurementState.filtered_measurements, measurement_row
-                            )
+                        rx.el.input(
+                            placeholder="Search by customer or cloth type...",
+                            on_change=MeasurementState.set_search_query,
+                            class_name="w-full md:w-80 pl-10 pr-4 py-2 border rounded-lg focus:ring-purple-500 focus:border-purple-500",
+                            default_value=MeasurementState.search_query,
                         ),
-                        class_name="min-w-full divide-y divide-gray-200",
+                        class_name="relative",
                     ),
-                    rx.cond(
-                        MeasurementState.filtered_measurements.length() == 0,
-                        rx.el.div(
-                            rx.icon("ruler", class_name="h-12 w-12 text-gray-400 mb-4"),
-                            rx.el.h3(
-                                "No Measurements Found",
-                                class_name="text-lg font-semibold text-gray-700",
-                            ),
-                            rx.el.p(
-                                "Add your first measurement to get started.",
-                                class_name="text-gray-500 mt-1",
-                            ),
-                            class_name="text-center py-16",
-                        ),
-                        None,
+                    rx.el.button(
+                        rx.icon("plus", class_name="mr-2 h-5 w-5"),
+                        "Add Measurement",
+                        on_click=MeasurementState.toggle_form,
+                        class_name="flex items-center bg-purple-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-purple-700 transition-colors",
                     ),
-                    class_name="overflow-x-auto border border-gray-200 rounded-xl",
+                    class_name="flex justify-between items-center mb-6",
                 ),
-                class_name="bg-white p-6 rounded-xl shadow-sm",
+                rx.el.div(
+                    rx.el.div(
+                        rx.el.table(
+                            rx.el.thead(
+                                rx.el.tr(
+                                    rx.el.th(
+                                        "Customer",
+                                        scope="col",
+                                        class_name="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider",
+                                    ),
+                                    rx.el.th(
+                                        "Cloth Type",
+                                        scope="col",
+                                        class_name="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider",
+                                    ),
+                                    rx.el.th(
+                                        "Chest",
+                                        scope="col",
+                                        class_name="px-6 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider",
+                                    ),
+                                    rx.el.th(
+                                        "Waist",
+                                        scope="col",
+                                        class_name="px-6 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider",
+                                    ),
+                                    rx.el.th(
+                                        "Hip",
+                                        scope="col",
+                                        class_name="px-6 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider",
+                                    ),
+                                    rx.el.th(
+                                        "Shoulder",
+                                        scope="col",
+                                        class_name="px-6 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider",
+                                    ),
+                                    rx.el.th(
+                                        "Sleeve",
+                                        scope="col",
+                                        class_name="px-6 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider",
+                                    ),
+                                    rx.el.th(
+                                        "Actions",
+                                        scope="col",
+                                        class_name="px-6 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider",
+                                    ),
+                                )
+                            ),
+                            rx.el.tbody(
+                                rx.foreach(
+                                    MeasurementState.filtered_measurements,
+                                    measurement_row,
+                                )
+                            ),
+                            class_name="min-w-full divide-y divide-gray-200",
+                        ),
+                        rx.cond(
+                            MeasurementState.filtered_measurements.length() == 0,
+                            rx.el.div(
+                                rx.icon(
+                                    "ruler", class_name="h-12 w-12 text-gray-400 mb-4"
+                                ),
+                                rx.el.h3(
+                                    "No Measurements Found",
+                                    class_name="text-lg font-semibold text-gray-700",
+                                ),
+                                rx.el.p(
+                                    "Add your first measurement to get started.",
+                                    class_name="text-gray-500 mt-1",
+                                ),
+                                class_name="text-center py-16",
+                            ),
+                            None,
+                        ),
+                        class_name="overflow-x-auto border border-gray-200 rounded-xl",
+                    ),
+                    class_name="bg-white p-6 rounded-xl shadow-sm",
+                ),
+                measurement_form(),
+                class_name="flex-1 p-4 md:p-8 overflow-auto",
             ),
-            measurement_form(),
-            class_name="flex-1 p-6 md:p-8 overflow-auto",
+            class_name="flex flex-col w-full",
         ),
         class_name="flex min-h-screen w-full bg-gray-50 font-['Lato']",
     )
