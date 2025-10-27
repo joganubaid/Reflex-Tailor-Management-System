@@ -25,12 +25,15 @@ def _form_select(*children, **props) -> rx.Component:
 
 
 def measurement_form() -> rx.Component:
-    cloth_type = MeasurementState.selected_cloth_type
     return rx.dialog.root(
         rx.dialog.content(
             rx.el.form(
                 rx.dialog.title(
-                    "Add New Measurement",
+                    rx.cond(
+                        MeasurementState.is_editing,
+                        "Edit Measurement",
+                        "Add New Measurement",
+                    ),
                     class_name="text-2xl font-bold text-gray-800 mb-6",
                 ),
                 rx.el.div(
@@ -75,6 +78,7 @@ def measurement_form() -> rx.Component:
                         _form_input(
                             name="chest",
                             type="number",
+                            step="0.01",
                             default_value=MeasurementState.chest,
                         ),
                     ),
@@ -83,6 +87,7 @@ def measurement_form() -> rx.Component:
                         _form_input(
                             name="waist",
                             type="number",
+                            step="0.01",
                             default_value=MeasurementState.waist,
                         ),
                     ),
@@ -91,6 +96,7 @@ def measurement_form() -> rx.Component:
                         _form_input(
                             name="hip",
                             type="number",
+                            step="0.01",
                             default_value=MeasurementState.hip,
                         ),
                     ),
@@ -99,6 +105,7 @@ def measurement_form() -> rx.Component:
                         _form_input(
                             name="shoulder_width",
                             type="number",
+                            step="0.01",
                             default_value=MeasurementState.shoulder_width,
                         ),
                     ),
@@ -107,6 +114,7 @@ def measurement_form() -> rx.Component:
                         _form_input(
                             name="sleeve_length",
                             type="number",
+                            step="0.01",
                             default_value=MeasurementState.sleeve_length,
                         ),
                     ),
@@ -115,6 +123,7 @@ def measurement_form() -> rx.Component:
                         _form_input(
                             name="shirt_length",
                             type="number",
+                            step="0.01",
                             default_value=MeasurementState.shirt_length,
                         ),
                     ),
@@ -123,6 +132,7 @@ def measurement_form() -> rx.Component:
                         _form_input(
                             name="pant_length",
                             type="number",
+                            step="0.01",
                             default_value=MeasurementState.pant_length,
                         ),
                     ),
@@ -131,6 +141,7 @@ def measurement_form() -> rx.Component:
                         _form_input(
                             name="inseam",
                             type="number",
+                            step="0.01",
                             default_value=MeasurementState.inseam,
                         ),
                     ),
@@ -139,6 +150,7 @@ def measurement_form() -> rx.Component:
                         _form_input(
                             name="neck",
                             type="number",
+                            step="0.01",
                             default_value=MeasurementState.neck,
                         ),
                     ),
@@ -154,7 +166,11 @@ def measurement_form() -> rx.Component:
                         )
                     ),
                     rx.el.button(
-                        "Save Measurement",
+                        rx.cond(
+                            MeasurementState.is_editing,
+                            "Save Changes",
+                            "Save Measurement",
+                        ),
                         type="submit",
                         class_name="py-2 px-4 rounded-lg bg-purple-600 text-white hover:bg-purple-700 font-semibold",
                     ),
@@ -167,6 +183,38 @@ def measurement_form() -> rx.Component:
         ),
         open=MeasurementState.show_form,
         on_open_change=MeasurementState.set_show_form,
+    )
+
+
+def delete_measurement_dialog() -> rx.Component:
+    return rx.dialog.root(
+        rx.dialog.content(
+            rx.dialog.title(
+                "Confirm Deletion", class_name="text-xl font-bold text-gray-800"
+            ),
+            rx.dialog.description(
+                "Are you sure you want to delete this measurement? This action cannot be undone.",
+                class_name="my-4 text-gray-600",
+            ),
+            rx.el.div(
+                rx.dialog.close(
+                    rx.el.button(
+                        "Cancel",
+                        on_click=MeasurementState.cancel_delete,
+                        class_name="py-2 px-4 rounded-lg bg-gray-200 text-gray-700 hover:bg-gray-300 font-semibold",
+                    )
+                ),
+                rx.el.button(
+                    "Delete",
+                    on_click=MeasurementState.delete_measurement,
+                    class_name="py-2 px-4 rounded-lg bg-red-600 text-white hover:bg-red-700 font-semibold",
+                ),
+                class_name="flex justify-end gap-4 mt-6",
+            ),
+            class_name="p-6 bg-white rounded-xl shadow-lg border border-gray-100 w-96",
+        ),
+        open=MeasurementState.show_delete_dialog,
+        on_open_change=MeasurementState.set_show_delete_dialog,
     )
 
 
@@ -191,10 +239,14 @@ def measurement_row(measurement: rx.Var[dict]) -> rx.Component:
             rx.el.div(
                 rx.el.button(
                     rx.icon("file-pen-line", class_name="h-4 w-4"),
+                    on_click=lambda: MeasurementState.start_editing(measurement),
                     class_name="p-2 text-gray-500 hover:text-purple-600 hover:bg-purple-50 rounded-md",
                 ),
                 rx.el.button(
                     rx.icon("trash-2", class_name="h-4 w-4"),
+                    on_click=lambda: MeasurementState.show_delete_confirmation(
+                        measurement["measurement_id"]
+                    ),
                     class_name="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-md",
                 ),
                 class_name="flex items-center justify-center gap-2",
@@ -322,6 +374,7 @@ def measurements_page() -> rx.Component:
                     class_name="bg-white p-6 rounded-xl shadow-sm",
                 ),
                 measurement_form(),
+                delete_measurement_dialog(),
                 class_name="flex-1 p-4 md:p-8 overflow-auto",
             ),
             class_name="flex flex-col w-full",

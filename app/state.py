@@ -506,6 +506,8 @@ ORDER BY o.order_date DESC""")
 class MaterialState(BaseState):
     materials: list[Material] = []
     search_query: str = ""
+    stock_filter: str = "all"
+    type_filter: str = "all"
     show_form: bool = False
     is_editing: bool = False
     editing_material_id: int | None = None
@@ -546,15 +548,24 @@ class MaterialState(BaseState):
 
     @rx.var
     def filtered_materials(self) -> list[Material]:
-        if not self.search_query.strip():
-            return self.materials
-        lower_query = self.search_query.lower()
-        return [
-            m
-            for m in self.materials
-            if lower_query in m["material_name"].lower()
-            or lower_query in m["material_type"].lower()
-        ]
+        materials = self.materials
+        if self.stock_filter == "low":
+            materials = [
+                m
+                for m in materials
+                if m["quantity_in_stock"] <= m["reorder_level"]
+                and m["quantity_in_stock"] > 0
+            ]
+        elif self.stock_filter == "out":
+            materials = [m for m in materials if m["quantity_in_stock"] == 0]
+        if self.type_filter != "all":
+            materials = [m for m in materials if m["material_type"] == self.type_filter]
+        if self.search_query.strip():
+            lower_query = self.search_query.lower()
+            materials = [
+                m for m in materials if lower_query in m["material_name"].lower()
+            ]
+        return materials
 
     @rx.var
     def total_inventory_value(self) -> float:
