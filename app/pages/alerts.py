@@ -1,6 +1,149 @@
 import reflex as rx
-from app.states.alert_state import AlertState
-from app.components.sidebar import sidebar, mobile_header
+from app.states.alert_state import AlertState, AlertSetting
+from app.components.sidebar import sidebar
+
+
+def alert_setting_row(setting: rx.Var[dict]) -> rx.Component:
+    return rx.el.tr(
+        rx.el.td(
+            setting["alert_type"].replace("_", " ").capitalize(),
+            class_name="px-6 py-4 font-medium text-gray-900",
+        ),
+        rx.el.td(
+            rx.el.span(
+                rx.cond(setting["enabled"], "Enabled", "Disabled"),
+                class_name=rx.cond(
+                    setting["enabled"],
+                    "px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-700",
+                    "px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-700",
+                ),
+            ),
+            class_name="px-6 py-4",
+        ),
+        rx.el.td(
+            rx.cond(
+                setting["threshold_value"] > 0,
+                setting["threshold_value"].to_string(),
+                "N/A",
+            ),
+            class_name="px-6 py-4",
+        ),
+        rx.el.td(setting["notification_method"].upper(), class_name="px-6 py-4"),
+        rx.el.td(setting["recipients"], class_name="px-6 py-4 text-sm text-gray-600"),
+        rx.el.td(
+            rx.el.button(
+                rx.icon("copy", class_name="h-4 w-4"),
+                on_click=lambda: AlertState.start_editing(setting),
+                class_name="p-2 text-gray-500 hover:text-purple-600 hover:bg-purple-50 rounded-md",
+            ),
+            class_name="px-6 py-4 text-center",
+        ),
+        class_name="border-b bg-white hover:bg-gray-50/50",
+    )
+
+
+def alert_history_row(history: rx.Var[dict]) -> rx.Component:
+    return rx.el.tr(
+        rx.el.td(
+            history["alert_type"].replace("_", " ").capitalize(),
+            class_name="px-6 py-4 font-medium",
+        ),
+        rx.el.td(history["message"], class_name="px-6 py-4 text-sm"),
+        rx.el.td(history["severity"].capitalize(), class_name="px-6 py-4"),
+        rx.el.td(
+            history["triggered_at"].to_string().split("T")[0], class_name="px-6 py-4"
+        ),
+        class_name="border-b bg-white hover:bg-gray-50/50",
+    )
+
+
+def edit_alert_dialog() -> rx.Component:
+    return rx.dialog.root(
+        rx.dialog.content(
+            rx.el.form(
+                rx.dialog.title(
+                    "Edit Alert Setting", class_name="text-2xl font-bold mb-4"
+                ),
+                rx.el.p(
+                    AlertState.editing_setting["alert_type"]
+                    .replace("_", " ")
+                    .capitalize(),
+                    class_name="text-gray-600 mb-6",
+                ),
+                rx.el.div(
+                    rx.el.label("Enabled", class_name="flex items-center gap-2"),
+                    rx.el.input(
+                        type="checkbox",
+                        name="enabled",
+                        checked=AlertState.editing_setting["enabled"],
+                    ),
+                    class_name="mb-4",
+                ),
+                rx.el.div(
+                    rx.el.label(
+                        "Threshold Value", class_name="block text-sm font-semibold"
+                    ),
+                    rx.el.input(
+                        name="threshold_value",
+                        default_value=AlertState.editing_setting[
+                            "threshold_value"
+                        ].to_string(),
+                        type="number",
+                        class_name="w-full p-2 border rounded mt-1",
+                    ),
+                    class_name="mb-4",
+                ),
+                rx.el.div(
+                    rx.el.label(
+                        "Notification Method", class_name="block text-sm font-semibold"
+                    ),
+                    rx.el.select(
+                        rx.el.option("SMS", value="sms"),
+                        rx.el.option("Email", value="email"),
+                        rx.el.option("Both", value="both"),
+                        name="notification_method",
+                        value=AlertState.editing_setting["notification_method"],
+                        class_name="w-full p-2 border rounded mt-1",
+                    ),
+                    class_name="mb-4",
+                ),
+                rx.el.div(
+                    rx.el.label(
+                        "Recipients (comma-separated)",
+                        class_name="block text-sm font-semibold",
+                    ),
+                    rx.el.textarea(
+                        name="recipients",
+                        default_value=AlertState.editing_setting["recipients"],
+                        class_name="w-full p-2 border rounded mt-1",
+                    ),
+                    class_name="mb-6",
+                ),
+                rx.el.div(
+                    rx.dialog.close(
+                        rx.el.button(
+                            "Cancel",
+                            on_click=AlertState.cancel_editing,
+                            class_name="py-2 px-4 rounded-lg bg-gray-200 font-semibold",
+                        )
+                    ),
+                    rx.el.button(
+                        "Save Changes",
+                        type="submit",
+                        class_name="py-2 px-4 rounded-lg bg-purple-600 text-white font-semibold",
+                    ),
+                    class_name="flex justify-end gap-4 mt-6",
+                ),
+                on_submit=AlertState.save_setting,
+            ),
+            class_name="p-8 bg-white rounded-xl shadow-lg w-[32rem]",
+        ),
+        open=AlertState.show_edit_dialog,
+        on_open_change=lambda open: AlertState.cancel_editing(),
+    )
+
+
+from app.components.sidebar import mobile_header
 
 
 def alerts_page() -> rx.Component:
@@ -21,113 +164,96 @@ def alerts_page() -> rx.Component:
                     class_name="mb-8",
                 ),
                 rx.el.div(
-                    rx.el.div(
-                        rx.icon("settings", class_name="h-16 w-16 text-gray-400 mb-6"),
-                        rx.el.h2(
-                            "Smart Alerts Coming Soon",
-                            class_name="text-2xl font-bold text-gray-700 mb-4",
-                        ),
-                        rx.el.p(
-                            "The smart alerts system requires additional database tables:",
-                            class_name="text-gray-600 mb-4",
-                        ),
-                        rx.el.ul(
-                            rx.el.li("• alert_settings", class_name="text-gray-600"),
-                            rx.el.li("• alert_history", class_name="text-gray-600"),
-                            rx.el.li(
-                                "• automation_workflows", class_name="text-gray-600"
-                            ),
-                            class_name="mb-6 space-y-2",
-                        ),
-                        rx.el.p(
-                            "Once these tables are added to your database schema, you'll get:",
-                            class_name="text-gray-600 mb-4",
-                        ),
-                        rx.el.div(
-                            rx.el.div(
-                                rx.icon("bell", class_name="h-8 w-8 text-yellow-500"),
-                                rx.el.div(
-                                    rx.el.h4(
-                                        "Low Stock Alerts",
-                                        class_name="font-semibold text-gray-800",
-                                    ),
-                                    rx.el.p(
-                                        "Get notified when materials run low",
-                                        class_name="text-sm text-gray-600",
-                                    ),
-                                ),
-                                class_name="flex items-start gap-4 p-4 bg-yellow-50 rounded-lg",
-                            ),
-                            rx.el.div(
-                                rx.icon("clock", class_name="h-8 w-8 text-orange-500"),
-                                rx.el.div(
-                                    rx.el.h4(
-                                        "Payment Reminders",
-                                        class_name="font-semibold text-gray-800",
-                                    ),
-                                    rx.el.p(
-                                        "Auto-remind customers about due payments",
-                                        class_name="text-sm text-gray-600",
-                                    ),
-                                ),
-                                class_name="flex items-start gap-4 p-4 bg-orange-50 rounded-lg",
-                            ),
-                            rx.el.div(
-                                rx.icon("truck", class_name="h-8 w-8 text-blue-500"),
-                                rx.el.div(
-                                    rx.el.h4(
-                                        "Delivery Alerts",
-                                        class_name="font-semibold text-gray-800",
-                                    ),
-                                    rx.el.p(
-                                        "Track order deadlines and delivery dates",
-                                        class_name="text-sm text-gray-600",
-                                    ),
-                                ),
-                                class_name="flex items-start gap-4 p-4 bg-blue-50 rounded-lg",
-                            ),
-                            rx.el.div(
-                                rx.icon(
-                                    "smartphone", class_name="h-8 w-8 text-green-500"
-                                ),
-                                rx.el.div(
-                                    rx.el.h4(
-                                        "SMS & Email Notifications",
-                                        class_name="font-semibold text-gray-800",
-                                    ),
-                                    rx.el.p(
-                                        "Choose how and when to receive alerts",
-                                        class_name="text-sm text-gray-600",
-                                    ),
-                                ),
-                                class_name="flex items-start gap-4 p-4 bg-green-50 rounded-lg",
-                            ),
-                            rx.el.div(
-                                rx.icon("zap", class_name="h-8 w-8 text-purple-500"),
-                                rx.el.div(
-                                    rx.el.h4(
-                                        "Automated Workflows",
-                                        class_name="font-semibold text-gray-800",
-                                    ),
-                                    rx.el.p(
-                                        "Set up automated actions based on triggers",
-                                        class_name="text-sm text-gray-600",
-                                    ),
-                                ),
-                                class_name="flex items-start gap-4 p-4 bg-purple-50 rounded-lg",
-                            ),
-                            class_name="grid gap-4 mb-8",
-                        ),
-                        rx.el.div(
-                            rx.el.p(
-                                "🔔 Current: You can still manually track orders and payments using the existing sections.",
-                                class_name="text-sm text-indigo-700 bg-indigo-50 p-3 rounded-lg",
-                            )
-                        ),
-                        class_name="text-center max-w-2xl mx-auto",
+                    rx.el.h2(
+                        "Alert Settings",
+                        class_name="text-xl font-semibold text-gray-700 mb-4",
                     ),
-                    class_name="bg-white p-8 rounded-xl shadow-sm",
+                    rx.el.div(
+                        rx.el.div(
+                            rx.el.table(
+                                rx.el.thead(
+                                    rx.el.tr(
+                                        rx.el.th(
+                                            "Alert Type",
+                                            class_name="px-6 py-3 text-left text-xs font-bold uppercase",
+                                        ),
+                                        rx.el.th(
+                                            "Status",
+                                            class_name="px-6 py-3 text-left text-xs font-bold uppercase",
+                                        ),
+                                        rx.el.th(
+                                            "Threshold",
+                                            class_name="px-6 py-3 text-left text-xs font-bold uppercase",
+                                        ),
+                                        rx.el.th(
+                                            "Method",
+                                            class_name="px-6 py-3 text-left text-xs font-bold uppercase",
+                                        ),
+                                        rx.el.th(
+                                            "Recipients",
+                                            class_name="px-6 py-3 text-left text-xs font-bold uppercase",
+                                        ),
+                                        rx.el.th(
+                                            "Action",
+                                            class_name="px-6 py-3 text-center text-xs font-bold uppercase",
+                                        ),
+                                    )
+                                ),
+                                rx.el.tbody(
+                                    rx.foreach(
+                                        AlertState.alert_settings, alert_setting_row
+                                    )
+                                ),
+                                class_name="min-w-full divide-y divide-gray-200",
+                            ),
+                            class_name="overflow-x-auto",
+                        ),
+                        class_name="overflow-hidden border border-gray-200 rounded-xl",
+                    ),
+                    class_name="bg-white p-6 rounded-xl shadow-sm mb-8",
                 ),
+                rx.el.div(
+                    rx.el.h2(
+                        "Alert History",
+                        class_name="text-xl font-semibold text-gray-700 mb-4",
+                    ),
+                    rx.el.div(
+                        rx.el.div(
+                            rx.el.table(
+                                rx.el.thead(
+                                    rx.el.tr(
+                                        rx.el.th(
+                                            "Alert Type",
+                                            class_name="px-6 py-3 text-left text-xs font-bold uppercase",
+                                        ),
+                                        rx.el.th(
+                                            "Message",
+                                            class_name="px-6 py-3 text-left text-xs font-bold uppercase",
+                                        ),
+                                        rx.el.th(
+                                            "Severity",
+                                            class_name="px-6 py-3 text-left text-xs font-bold uppercase",
+                                        ),
+                                        rx.el.th(
+                                            "Triggered At",
+                                            class_name="px-6 py-3 text-left text-xs font-bold uppercase",
+                                        ),
+                                    )
+                                ),
+                                rx.el.tbody(
+                                    rx.foreach(
+                                        AlertState.alert_history, alert_history_row
+                                    )
+                                ),
+                                class_name="min-w-full divide-y divide-gray-200",
+                            ),
+                            class_name="overflow-x-auto",
+                        ),
+                        class_name="overflow-hidden border border-gray-200 rounded-xl",
+                    ),
+                    class_name="bg-white p-6 rounded-xl shadow-sm",
+                ),
+                edit_alert_dialog(),
                 class_name="flex-1 p-4 md:p-8 overflow-auto",
             ),
             class_name="flex flex-col w-full",

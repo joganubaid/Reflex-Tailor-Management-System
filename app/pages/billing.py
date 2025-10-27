@@ -23,6 +23,63 @@ def payment_status_badge(status: rx.Var[str]) -> rx.Component:
     )
 
 
+def billing_order_card(order: rx.Var[dict]) -> rx.Component:
+    payment_status = rx.cond(
+        order["balance_payment"] == 0,
+        "Paid",
+        rx.cond(order["advance_payment"] > 0, "Partial", "Pending"),
+    )
+    return rx.el.div(
+        rx.el.div(
+            rx.el.div(
+                rx.el.p(
+                    f"Order #{order['order_id']}", class_name="font-bold text-gray-800"
+                ),
+                payment_status_badge(payment_status),
+            ),
+            rx.el.p(order["customer_name"], class_name="text-sm text-gray-600"),
+            class_name="flex justify-between items-center mb-3",
+        ),
+        rx.el.div(
+            rx.el.div(
+                rx.el.p("Total", class_name="text-xs text-gray-500"),
+                rx.el.p(
+                    f"⁷{order['total_amount']}",
+                    class_name="font-semibold text-gray-700",
+                ),
+            ),
+            rx.el.div(
+                rx.el.p("Advance", class_name="text-xs text-gray-500"),
+                rx.el.p(
+                    f"⁷{order['advance_payment']}",
+                    class_name="font-semibold text-gray-700",
+                ),
+            ),
+            rx.el.div(
+                rx.el.p("Balance", class_name="text-xs text-gray-500"),
+                rx.el.p(
+                    f"⁷{order['balance_payment']}", class_name="font-bold text-red-600"
+                ),
+            ),
+            class_name="grid grid-cols-3 gap-4 py-3 border-t border-b",
+        ),
+        rx.el.div(
+            rx.el.button(
+                rx.icon("file-text", class_name="h-4 w-4 mr-2"),
+                "Invoice",
+                class_name="flex items-center px-3 py-1.5 text-xs font-medium text-purple-600 border border-purple-200 rounded-md hover:bg-purple-50",
+            ),
+            rx.el.button(
+                rx.icon("credit-card", class_name="h-4 w-4 mr-2"),
+                "Pay",
+                class_name="flex items-center px-3 py-1.5 text-xs font-medium text-green-600 border border-green-200 rounded-md hover:bg-green-50",
+            ),
+            class_name="flex items-center justify-end gap-2 mt-3",
+        ),
+        class_name="bg-white p-4 rounded-xl shadow-sm border border-gray-100",
+    )
+
+
 def billing_order_row(order: rx.Var[dict]) -> rx.Component:
     payment_status = rx.cond(
         order["balance_payment"] == 0,
@@ -45,11 +102,11 @@ def billing_order_row(order: rx.Var[dict]) -> rx.Component:
             class_name="px-6 py-4",
         ),
         rx.el.td(
-            f"₹{order['total_amount'].to_string()}", class_name="px-6 py-4 font-medium"
+            f"⁷{order['total_amount'].to_string()}", class_name="px-6 py-4 font-medium"
         ),
-        rx.el.td(f"₹{order['advance_payment'].to_string()}", class_name="px-6 py-4"),
+        rx.el.td(f"⁷{order['advance_payment'].to_string()}", class_name="px-6 py-4"),
         rx.el.td(
-            f"₹{order['balance_payment'].to_string()}",
+            f"⁷{order['balance_payment'].to_string()}",
             class_name=rx.cond(
                 order["balance_payment"] > 0,
                 "px-6 py-4 text-red-600 font-medium",
@@ -117,49 +174,57 @@ def billing_page() -> rx.Component:
                 ),
                 rx.el.div(
                     rx.el.div(
-                        rx.el.table(
-                            rx.el.thead(
-                                rx.el.tr(
-                                    rx.el.th(
-                                        "Order ID",
-                                        class_name="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider",
-                                    ),
-                                    rx.el.th(
-                                        "Customer",
-                                        class_name="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider",
-                                    ),
-                                    rx.el.th(
-                                        "Order Date",
-                                        class_name="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider",
-                                    ),
-                                    rx.el.th(
-                                        "Total",
-                                        class_name="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider",
-                                    ),
-                                    rx.el.th(
-                                        "Advance",
-                                        class_name="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider",
-                                    ),
-                                    rx.el.th(
-                                        "Balance",
-                                        class_name="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider",
-                                    ),
-                                    rx.el.th(
-                                        "Pay Status",
-                                        class_name="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider",
-                                    ),
-                                    rx.el.th(
-                                        "Actions",
-                                        class_name="px-6 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider",
-                                    ),
-                                )
+                        rx.foreach(BillingState.orders_for_billing, billing_order_card),
+                        class_name="grid grid-cols-1 gap-4 md:hidden",
+                    ),
+                    rx.el.div(
+                        rx.el.div(
+                            rx.el.table(
+                                rx.el.thead(
+                                    rx.el.tr(
+                                        rx.el.th(
+                                            "Order ID",
+                                            class_name="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider",
+                                        ),
+                                        rx.el.th(
+                                            "Customer",
+                                            class_name="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider",
+                                        ),
+                                        rx.el.th(
+                                            "Order Date",
+                                            class_name="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider",
+                                        ),
+                                        rx.el.th(
+                                            "Total",
+                                            class_name="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider",
+                                        ),
+                                        rx.el.th(
+                                            "Advance",
+                                            class_name="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider",
+                                        ),
+                                        rx.el.th(
+                                            "Balance",
+                                            class_name="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider",
+                                        ),
+                                        rx.el.th(
+                                            "Pay Status",
+                                            class_name="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider",
+                                        ),
+                                        rx.el.th(
+                                            "Actions",
+                                            class_name="px-6 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider",
+                                        ),
+                                    )
+                                ),
+                                rx.el.tbody(
+                                    rx.foreach(
+                                        BillingState.orders_for_billing,
+                                        billing_order_row,
+                                    )
+                                ),
+                                class_name="min-w-full divide-y divide-gray-200",
                             ),
-                            rx.el.tbody(
-                                rx.foreach(
-                                    BillingState.orders_for_billing, billing_order_row
-                                )
-                            ),
-                            class_name="min-w-full divide-y divide-gray-200",
+                            class_name="overflow-x-auto",
                         ),
                         rx.cond(
                             BillingState.orders_for_billing.length() == 0,
@@ -179,9 +244,9 @@ def billing_page() -> rx.Component:
                             ),
                             None,
                         ),
-                        class_name="overflow-x-auto border border-gray-200 rounded-xl",
+                        class_name="hidden md:block overflow-x-auto border border-gray-200 rounded-xl",
                     ),
-                    class_name="bg-white p-2 md:p-6 rounded-xl shadow-sm",
+                    class_name="md:bg-white md:p-2 md:p-6 rounded-xl shadow-sm",
                 ),
                 class_name="flex-1 p-4 md:p-8 overflow-auto",
             ),
