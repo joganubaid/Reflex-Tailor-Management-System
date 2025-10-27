@@ -46,6 +46,72 @@ def status_badge(coupon: rx.Var[dict]) -> rx.Component:
     )
 
 
+def coupon_card(coupon: rx.Var[dict]) -> rx.Component:
+    usage_percentage = rx.cond(
+        coupon["usage_limit"] > 0, coupon["used_count"] / coupon["usage_limit"] * 100, 0
+    )
+    return rx.el.div(
+        rx.el.div(
+            rx.el.p(
+                coupon["coupon_code"],
+                class_name="font-bold text-lg text-purple-600 uppercase tracking-wider",
+            ),
+            status_badge(coupon),
+            class_name="flex justify-between items-center mb-2",
+        ),
+        rx.el.p(
+            rx.cond(
+                coupon["discount_type"] == "percentage",
+                coupon["discount_value"].to_string() + "% OFF",
+                "⁷" + coupon["discount_value"].to_string() + " OFF",
+            ),
+            class_name="font-semibold text-gray-800",
+        ),
+        rx.el.p(
+            f"Min. order: ⁷{coupon['min_order_value']}",
+            class_name="text-sm text-gray-500",
+        ),
+        rx.el.div(
+            rx.el.p("Usage", class_name="text-xs text-gray-500"),
+            rx.el.div(
+                rx.el.div(class_name="w-full bg-gray-200 rounded-full h-2.5"),
+                rx.el.div(
+                    class_name="bg-purple-600 h-2.5 rounded-full",
+                    style={"width": usage_percentage.to_string() + "%"},
+                ),
+                class_name="relative flex-1",
+            ),
+            rx.el.span(
+                f"{coupon['used_count']}/{coupon['usage_limit']}",
+                class_name="text-xs font-semibold",
+            ),
+            class_name="flex items-center gap-2 mt-3",
+        ),
+        rx.el.div(
+            rx.el.div(
+                rx.el.button(
+                    rx.icon("file-pen-line", class_name="h-4 w-4"),
+                    on_click=lambda: CouponState.start_editing(coupon),
+                    class_name="p-2 text-gray-500 hover:text-purple-600 hover:bg-purple-50 rounded-md",
+                ),
+                rx.el.button(
+                    rx.icon("toggle-right", class_name="h-4 w-4"),
+                    on_click=lambda: CouponState.toggle_coupon_status(coupon),
+                    class_name="p-2 text-gray-500 hover:text-green-600 hover:bg-green-50 rounded-md",
+                ),
+                rx.el.button(
+                    rx.icon("trash-2", class_name="h-4 w-4"),
+                    on_click=lambda: CouponState.show_delete_confirmation(coupon),
+                    class_name="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-md",
+                ),
+                class_name="flex items-center justify-end gap-1 flex-1",
+            ),
+            class_name="flex items-center mt-3 pt-3 border-t",
+        ),
+        class_name="bg-white p-4 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow",
+    )
+
+
 def coupon_row(coupon: rx.Var[dict]) -> rx.Component:
     usage_percentage = rx.cond(
         coupon["usage_limit"] > 0, coupon["used_count"] / coupon["usage_limit"] * 100, 0
@@ -193,6 +259,10 @@ def coupons_page() -> rx.Component:
                 ),
                 rx.el.div(
                     rx.el.div(
+                        rx.foreach(CouponState.filtered_coupons, coupon_card),
+                        class_name="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:hidden",
+                    ),
+                    rx.el.div(
                         rx.el.div(
                             rx.el.table(
                                 rx.el.thead(
@@ -253,9 +323,9 @@ def coupons_page() -> rx.Component:
                             ),
                             None,
                         ),
-                        class_name="overflow-hidden border border-gray-200 rounded-xl",
+                        class_name="hidden md:block overflow-hidden border border-gray-200 rounded-xl",
                     ),
-                    class_name="bg-white p-6 rounded-xl shadow-sm",
+                    class_name="md:bg-white md:p-6 rounded-xl shadow-sm",
                 ),
                 coupon_form(),
                 delete_coupon_dialog(),

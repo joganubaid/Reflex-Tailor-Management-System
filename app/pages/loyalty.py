@@ -41,6 +41,34 @@ def tier_badge(tier: rx.Var[str]) -> rx.Component:
     )
 
 
+def leaderboard_card(customer: rx.Var[dict], index: rx.Var[int]) -> rx.Component:
+    return rx.el.div(
+        rx.el.div(
+            rx.el.div(
+                rx.el.span(
+                    index + 1,
+                    class_name="text-sm font-bold text-purple-600 bg-purple-100 rounded-full h-8 w-8 flex items-center justify-center",
+                ),
+                rx.el.p(
+                    customer["name"], class_name="font-semibold text-gray-800 truncate"
+                ),
+                class_name="flex items-center gap-3",
+            ),
+            tier_badge(customer["customer_tier"].capitalize()),
+            class_name="flex justify-between items-center",
+        ),
+        rx.el.div(
+            rx.icon("gem", class_name="h-5 w-5 mr-2 text-purple-500"),
+            rx.el.p(
+                customer["total_points"].to_string() + " points",
+                class_name="text-lg font-bold text-purple-600",
+            ),
+            class_name="flex items-center justify-center mt-3 pt-3 border-t",
+        ),
+        class_name="bg-white p-4 rounded-xl shadow-sm border border-gray-100",
+    )
+
+
 def leaderboard_row(customer: rx.Var[dict], index: rx.Var[int]) -> rx.Component:
     return rx.el.tr(
         rx.el.td(index + 1, class_name="px-6 py-4 font-bold text-gray-700 text-center"),
@@ -56,6 +84,40 @@ def leaderboard_row(customer: rx.Var[dict], index: rx.Var[int]) -> rx.Component:
             tier_badge(customer["customer_tier"].capitalize()), class_name="px-6 py-4"
         ),
         class_name="border-b bg-white hover:bg-gray-50/50",
+    )
+
+
+def transaction_card(transaction: rx.Var[dict]) -> rx.Component:
+    is_earned = transaction["points_change"] > 0
+    return rx.el.div(
+        rx.el.div(
+            rx.el.div(
+                rx.el.p(
+                    transaction["customer_name"],
+                    class_name="font-semibold text-gray-800",
+                ),
+                rx.el.p(
+                    transaction["transaction_date"].to_string().split("T")[0],
+                    class_name="text-xs text-gray-500",
+                ),
+            ),
+            rx.el.span(
+                rx.cond(is_earned, "+", "") + transaction["points_change"].to_string(),
+                class_name=rx.cond(
+                    is_earned,
+                    "text-xl font-bold text-green-600",
+                    "text-xl font-bold text-red-600",
+                ),
+            ),
+            class_name="flex justify-between items-start",
+        ),
+        rx.el.div(
+            rx.el.p(
+                transaction["description"],
+                class_name="text-sm text-gray-600 mt-2 truncate",
+            )
+        ),
+        class_name="bg-white p-4 rounded-xl shadow-sm border border-gray-100",
     )
 
 
@@ -169,7 +231,13 @@ def loyalty_page() -> rx.Component:
                                 ),
                                 class_name="overflow-x-auto",
                             ),
-                            class_name="overflow-hidden border rounded-xl",
+                            class_name="hidden md:block overflow-hidden border rounded-xl",
+                        ),
+                        rx.el.div(
+                            rx.foreach(
+                                LoyaltyState.points_leaderboard, leaderboard_card
+                            ),
+                            class_name="grid grid-cols-1 sm:grid-cols-2 gap-4 md:hidden",
                         ),
                         class_name="bg-white p-6 rounded-xl shadow-sm",
                     ),
@@ -265,7 +333,13 @@ def loyalty_page() -> rx.Component:
                                 ),
                                 None,
                             ),
-                            class_name="overflow-x-auto border rounded-xl",
+                            class_name="hidden md:block overflow-x-auto border rounded-xl",
+                        ),
+                        rx.el.div(
+                            rx.foreach(
+                                LoyaltyState.filtered_transactions, transaction_card
+                            ),
+                            class_name="grid grid-cols-1 gap-4 md:hidden",
                         ),
                         class_name="bg-white p-6 rounded-xl shadow-sm",
                     ),

@@ -257,6 +257,77 @@ def measurement_row(measurement: rx.Var[dict]) -> rx.Component:
     )
 
 
+def measurement_card(measurement: rx.Var[dict]) -> rx.Component:
+    return rx.el.div(
+        rx.el.div(
+            rx.el.p(
+                measurement["customer_name"],
+                class_name="font-bold text-lg text-gray-800",
+            ),
+            rx.el.p(
+                measurement["cloth_type"].capitalize(),
+                class_name="text-sm font-medium text-purple-600",
+            ),
+            class_name="flex-1",
+        ),
+        rx.el.div(
+            rx.el.p(
+                f"Measured: {measurement['measurement_date'].to_string().split('T')[0]}",
+                class_name="text-xs text-gray-500 mt-2",
+            ),
+            class_name="border-b pb-3 mb-3",
+        ),
+        rx.el.div(
+            rx.el.div(
+                rx.el.p("Chest", class_name="text-xs text-gray-500"),
+                rx.el.p(measurement["chest"].to_string(), class_name="font-semibold"),
+            ),
+            rx.el.div(
+                rx.el.p("Waist", class_name="text-xs text-gray-500"),
+                rx.el.p(measurement["waist"].to_string(), class_name="font-semibold"),
+            ),
+            rx.el.div(
+                rx.el.p("Hip", class_name="text-xs text-gray-500"),
+                rx.el.p(measurement["hip"].to_string(), class_name="font-semibold"),
+            ),
+            rx.el.div(
+                rx.el.p("Shoulder", class_name="text-xs text-gray-500"),
+                rx.el.p(
+                    measurement["shoulder_width"].to_string(),
+                    class_name="font-semibold",
+                ),
+            ),
+            rx.el.div(
+                rx.el.p("Sleeve", class_name="text-xs text-gray-500"),
+                rx.el.p(
+                    measurement["sleeve_length"].to_string(), class_name="font-semibold"
+                ),
+            ),
+            class_name="grid grid-cols-3 gap-y-2 text-center text-sm",
+        ),
+        rx.el.div(
+            rx.el.div(),
+            rx.el.div(
+                rx.el.button(
+                    rx.icon("file-pen-line", class_name="h-4 w-4"),
+                    on_click=lambda: MeasurementState.start_editing(measurement),
+                    class_name="p-2 text-gray-500 hover:text-purple-600 hover:bg-purple-50 rounded-md",
+                ),
+                rx.el.button(
+                    rx.icon("trash-2", class_name="h-4 w-4"),
+                    on_click=lambda: MeasurementState.show_delete_confirmation(
+                        measurement["measurement_id"]
+                    ),
+                    class_name="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-md",
+                ),
+                class_name="flex items-center gap-2 justify-end",
+            ),
+            class_name="flex justify-between items-center mt-4 pt-3 border-t",
+        ),
+        class_name="bg-white p-4 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow",
+    )
+
+
 def measurements_page() -> rx.Component:
     return rx.el.div(
         sidebar(),
@@ -298,80 +369,87 @@ def measurements_page() -> rx.Component:
                 ),
                 rx.el.div(
                     rx.el.div(
-                        rx.el.table(
-                            rx.el.thead(
-                                rx.el.tr(
-                                    rx.el.th(
-                                        "Customer",
-                                        scope="col",
-                                        class_name="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider",
-                                    ),
-                                    rx.el.th(
-                                        "Cloth Type",
-                                        scope="col",
-                                        class_name="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider",
-                                    ),
-                                    rx.el.th(
-                                        "Chest",
-                                        scope="col",
-                                        class_name="px-6 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider",
-                                    ),
-                                    rx.el.th(
-                                        "Waist",
-                                        scope="col",
-                                        class_name="px-6 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider",
-                                    ),
-                                    rx.el.th(
-                                        "Hip",
-                                        scope="col",
-                                        class_name="px-6 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider",
-                                    ),
-                                    rx.el.th(
-                                        "Shoulder",
-                                        scope="col",
-                                        class_name="px-6 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider",
-                                    ),
-                                    rx.el.th(
-                                        "Sleeve",
-                                        scope="col",
-                                        class_name="px-6 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider",
-                                    ),
-                                    rx.el.th(
-                                        "Actions",
-                                        scope="col",
-                                        class_name="px-6 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider",
-                                    ),
-                                )
-                            ),
-                            rx.el.tbody(
-                                rx.foreach(
-                                    MeasurementState.filtered_measurements,
-                                    measurement_row,
-                                )
-                            ),
-                            class_name="min-w-full divide-y divide-gray-200",
+                        rx.foreach(
+                            MeasurementState.filtered_measurements, measurement_card
                         ),
-                        rx.cond(
-                            MeasurementState.filtered_measurements.length() == 0,
-                            rx.el.div(
-                                rx.icon(
-                                    "ruler", class_name="h-12 w-12 text-gray-400 mb-4"
-                                ),
-                                rx.el.h3(
-                                    "No Measurements Found",
-                                    class_name="text-lg font-semibold text-gray-700",
-                                ),
-                                rx.el.p(
-                                    "Add your first measurement to get started.",
-                                    class_name="text-gray-500 mt-1",
-                                ),
-                                class_name="text-center py-16",
-                            ),
-                            None,
-                        ),
-                        class_name="overflow-x-auto border border-gray-200 rounded-xl",
+                        class_name="grid grid-cols-1 gap-4 md:hidden",
                     ),
-                    class_name="bg-white p-6 rounded-xl shadow-sm",
+                    rx.el.div(
+                        rx.el.div(
+                            rx.el.table(
+                                rx.el.thead(
+                                    rx.el.tr(
+                                        rx.el.th(
+                                            "Customer",
+                                            scope="col",
+                                            class_name="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider",
+                                        ),
+                                        rx.el.th(
+                                            "Cloth Type",
+                                            scope="col",
+                                            class_name="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider",
+                                        ),
+                                        rx.el.th(
+                                            "Chest",
+                                            scope="col",
+                                            class_name="px-6 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider",
+                                        ),
+                                        rx.el.th(
+                                            "Waist",
+                                            scope="col",
+                                            class_name="px-6 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider",
+                                        ),
+                                        rx.el.th(
+                                            "Hip",
+                                            scope="col",
+                                            class_name="px-6 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider",
+                                        ),
+                                        rx.el.th(
+                                            "Shoulder",
+                                            scope="col",
+                                            class_name="px-6 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider",
+                                        ),
+                                        rx.el.th(
+                                            "Sleeve",
+                                            scope="col",
+                                            class_name="px-6 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider",
+                                        ),
+                                        rx.el.th(
+                                            "Actions",
+                                            scope="col",
+                                            class_name="px-6 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider",
+                                        ),
+                                    )
+                                ),
+                                rx.el.tbody(
+                                    rx.foreach(
+                                        MeasurementState.filtered_measurements,
+                                        measurement_row,
+                                    )
+                                ),
+                                class_name="min-w-full divide-y divide-gray-200",
+                            ),
+                            class_name="overflow-x-auto",
+                        ),
+                        class_name="hidden md:block overflow-x-auto border border-gray-200 rounded-xl",
+                    ),
+                    rx.cond(
+                        MeasurementState.filtered_measurements.length() == 0,
+                        rx.el.div(
+                            rx.icon("ruler", class_name="h-12 w-12 text-gray-400 mb-4"),
+                            rx.el.h3(
+                                "No Measurements Found",
+                                class_name="text-lg font-semibold text-gray-700",
+                            ),
+                            rx.el.p(
+                                "Add your first measurement to get started.",
+                                class_name="text-gray-500 mt-1",
+                            ),
+                            class_name="text-center py-16 bg-white rounded-xl shadow-sm",
+                        ),
+                        None,
+                    ),
+                    class_name="md:bg-white md:p-6 rounded-xl shadow-sm",
                 ),
                 measurement_form(),
                 delete_measurement_dialog(),

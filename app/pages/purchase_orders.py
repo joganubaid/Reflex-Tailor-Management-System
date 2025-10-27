@@ -25,6 +25,62 @@ def status_badge(status: rx.Var[str]) -> rx.Component:
     )
 
 
+def po_card(po: rx.Var[dict]) -> rx.Component:
+    return rx.el.div(
+        rx.el.div(
+            rx.el.p(f"PO #{po['po_id']}", class_name="font-bold text-gray-800"),
+            status_badge(po["status"]),
+            class_name="flex justify-between items-center mb-2",
+        ),
+        rx.el.p(po["supplier_name"], class_name="text-sm text-gray-600"),
+        rx.el.div(
+            rx.el.div(
+                rx.el.p("Order Date", class_name="text-xs text-gray-500"),
+                rx.el.p(
+                    po["po_date"].to_string().split("T")[0], class_name="font-medium"
+                ),
+            ),
+            rx.el.div(
+                rx.el.p("Total", class_name="text-xs text-gray-500"),
+                rx.el.p(
+                    f"⁷{po['total_amount']}", class_name="font-bold text-purple-600"
+                ),
+            ),
+            class_name="grid grid-cols-2 gap-4 mt-3 pt-3 border-t",
+        ),
+        rx.el.div(
+            rx.el.div(),
+            rx.el.div(
+                rx.cond(
+                    po["status"] == "pending",
+                    rx.el.button(
+                        "Mark Ordered",
+                        on_click=lambda: PurchaseOrderState.update_po_status(
+                            po["po_id"], "ordered"
+                        ),
+                        class_name="px-3 py-1.5 text-xs bg-blue-100 text-blue-700 rounded-md font-semibold",
+                    ),
+                    None,
+                ),
+                rx.cond(
+                    po["status"] == "ordered",
+                    rx.el.button(
+                        "Mark Received",
+                        on_click=lambda: PurchaseOrderState.update_po_status(
+                            po["po_id"], "received"
+                        ),
+                        class_name="px-3 py-1.5 text-xs bg-green-100 text-green-700 rounded-md font-semibold",
+                    ),
+                    None,
+                ),
+                class_name="flex gap-2 justify-end",
+            ),
+            class_name="flex justify-between items-center mt-3 pt-3 border-t",
+        ),
+        class_name="bg-white p-4 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow",
+    )
+
+
 def po_row(po: rx.Var[dict]) -> rx.Component:
     return rx.el.tr(
         rx.el.td(f"#{po['po_id']}", class_name="px-6 py-4 font-medium text-gray-900"),
@@ -232,6 +288,10 @@ def purchase_orders_page() -> rx.Component:
                 ),
                 rx.el.div(
                     rx.el.div(
+                        rx.foreach(PurchaseOrderState.purchase_orders, po_card),
+                        class_name="grid grid-cols-1 gap-4 md:hidden",
+                    ),
+                    rx.el.div(
                         rx.el.div(
                             rx.el.table(
                                 rx.el.thead(
@@ -290,9 +350,9 @@ def purchase_orders_page() -> rx.Component:
                             ),
                             None,
                         ),
-                        class_name="overflow-hidden border border-gray-200 rounded-xl",
+                        class_name="hidden md:block overflow-hidden border border-gray-200 rounded-xl",
                     ),
-                    class_name="bg-white p-6 rounded-xl shadow-sm",
+                    class_name="md:bg-white md:p-6 rounded-xl shadow-sm",
                 ),
                 po_form(),
                 class_name="flex-1 p-4 md:p-8 overflow-auto",

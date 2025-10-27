@@ -109,6 +109,41 @@ def expense_form() -> rx.Component:
     )
 
 
+def expense_card(expense: rx.Var[dict]) -> rx.Component:
+    return rx.el.div(
+        rx.el.div(
+            rx.el.div(
+                rx.el.p(
+                    expense["category_name"].capitalize(),
+                    class_name="font-bold text-gray-800",
+                ),
+                rx.el.p(
+                    expense["expense_date"].to_string().split("T")[0],
+                    class_name="text-xs text-gray-500",
+                ),
+            ),
+            rx.el.p(
+                f"⁷{expense['amount']}", class_name="font-bold text-2xl text-red-600"
+            ),
+            class_name="flex justify-between items-start",
+        ),
+        rx.el.p(expense["description"], class_name="text-sm text-gray-600 mt-2"),
+        rx.el.p(
+            f"Vendor: {expense['vendor_name']}", class_name="text-xs text-gray-500 mt-1"
+        ),
+        rx.el.div(
+            rx.el.div(),
+            rx.el.button(
+                rx.icon("copy", class_name="h-4 w-4"),
+                on_click=lambda: ExpenseState.start_editing(expense),
+                class_name="p-2 text-gray-500 hover:text-purple-600 hover:bg-purple-50 rounded-md",
+            ),
+            class_name="flex justify-between items-center mt-3 pt-3 border-t",
+        ),
+        class_name="bg-white p-4 rounded-xl shadow-sm border border-gray-100",
+    )
+
+
 def expense_row(expense: rx.Var[dict]) -> rx.Component:
     return rx.el.tr(
         rx.el.td(
@@ -184,6 +219,10 @@ def expenses_page() -> rx.Component:
                 ),
                 rx.el.div(
                     rx.el.div(
+                        rx.foreach(ExpenseState.filtered_expenses, expense_card),
+                        class_name="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:hidden",
+                    ),
+                    rx.el.div(
                         rx.el.div(
                             rx.el.table(
                                 rx.el.thead(
@@ -233,9 +272,9 @@ def expenses_page() -> rx.Component:
                             ),
                             None,
                         ),
-                        class_name="overflow-hidden border border-gray-200 rounded-xl",
+                        class_name="hidden md:block overflow-hidden border border-gray-200 rounded-xl",
                     ),
-                    class_name="bg-white p-6 rounded-xl shadow-sm",
+                    class_name="md:bg-white md:p-6 rounded-xl shadow-sm",
                 ),
                 expense_form(),
                 class_name="flex-1 p-4 md:p-8 overflow-auto",

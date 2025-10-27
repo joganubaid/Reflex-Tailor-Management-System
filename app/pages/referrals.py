@@ -33,6 +33,41 @@ def status_badge(status: rx.Var[str]) -> rx.Component:
     )
 
 
+def top_referrer_card(referrer: rx.Var[dict], index: rx.Var[int]) -> rx.Component:
+    return rx.el.div(
+        rx.el.div(
+            rx.el.div(
+                rx.el.span(
+                    index + 1,
+                    class_name="text-sm font-bold text-purple-600 bg-purple-100 rounded-full h-8 w-8 flex items-center justify-center",
+                ),
+                rx.el.p(
+                    referrer["referrer_name"], class_name="font-semibold text-gray-800"
+                ),
+                class_name="flex items-center gap-3",
+            )
+        ),
+        rx.el.div(
+            rx.el.div(
+                rx.el.p("Referrals", class_name="text-xs text-gray-500"),
+                rx.el.p(
+                    referrer["referral_count"].to_string(),
+                    class_name="font-bold text-lg text-purple-600",
+                ),
+            ),
+            rx.el.div(
+                rx.el.p("Rewards", class_name="text-xs text-gray-500"),
+                rx.el.p(
+                    f"{referrer['total_rewards']} pts",
+                    class_name="font-bold text-lg text-green-600",
+                ),
+            ),
+            class_name="grid grid-cols-2 gap-4 mt-3 pt-3 border-t text-center",
+        ),
+        class_name="bg-white p-4 rounded-xl shadow-sm border border-gray-100",
+    )
+
+
 def top_referrer_row(referrer: rx.Var[dict], index: rx.Var[int]) -> rx.Component:
     return rx.el.tr(
         rx.el.td(index + 1, class_name="px-4 py-3 font-bold text-gray-700 text-center"),
@@ -46,6 +81,43 @@ def top_referrer_row(referrer: rx.Var[dict], index: rx.Var[int]) -> rx.Component
             class_name="px-4 py-3 text-center font-semibold text-green-600",
         ),
         class_name="border-b bg-white hover:bg-gray-50/50",
+    )
+
+
+def referral_card(referral: rx.Var[dict]) -> rx.Component:
+    return rx.el.div(
+        rx.el.div(
+            rx.el.div(
+                rx.el.p(
+                    f"{referral['referrer_name']} -> {referral['referred_name']}",
+                    class_name="font-semibold text-gray-800 truncate",
+                ),
+                rx.el.p(
+                    referral["referral_date"].to_string().split("T")[0],
+                    class_name="text-xs text-gray-500",
+                ),
+            ),
+            status_badge(referral["referral_status"]),
+            class_name="flex justify-between items-start mb-3",
+        ),
+        rx.el.div(
+            rx.el.div(
+                rx.el.p("Reward", class_name="text-xs text-gray-500"),
+                rx.el.p(
+                    f"{referral['reward_points']} pts",
+                    class_name="font-semibold text-purple-600",
+                ),
+            ),
+            rx.el.div(
+                rx.el.p("Order Made", class_name="text-xs text-gray-500"),
+                rx.el.p(
+                    rx.cond(referral["order_completed"], "Yes", "No"),
+                    class_name="font-semibold",
+                ),
+            ),
+            class_name="grid grid-cols-2 gap-4 mt-3 pt-3 border-t text-center",
+        ),
+        class_name="bg-white p-4 rounded-xl shadow-sm border border-gray-100",
     )
 
 
@@ -158,7 +230,11 @@ def referrals_page() -> rx.Component:
                                 ),
                                 class_name="overflow-x-auto",
                             ),
-                            class_name="overflow-hidden border rounded-xl",
+                            class_name="hidden md:block overflow-hidden border rounded-xl",
+                        ),
+                        rx.el.div(
+                            rx.foreach(ReferralState.top_referrers, top_referrer_card),
+                            class_name="grid grid-cols-1 sm:grid-cols-2 gap-4 md:hidden",
                         ),
                         class_name="bg-white p-6 rounded-xl shadow-sm",
                     ),
@@ -254,7 +330,11 @@ def referrals_page() -> rx.Component:
                                 ),
                                 None,
                             ),
-                            class_name="overflow-hidden border rounded-xl",
+                            class_name="hidden md:block overflow-hidden border rounded-xl",
+                        ),
+                        rx.el.div(
+                            rx.foreach(ReferralState.filtered_referrals, referral_card),
+                            class_name="grid grid-cols-1 gap-4 md:hidden",
                         ),
                         class_name="bg-white p-6 rounded-xl shadow-sm",
                     ),

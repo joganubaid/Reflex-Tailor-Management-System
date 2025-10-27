@@ -23,6 +23,61 @@ def status_badge(status: rx.Var[str]) -> rx.Component:
     )
 
 
+def task_card(task: rx.Var[dict]) -> rx.Component:
+    return rx.el.div(
+        rx.el.div(
+            rx.el.div(
+                rx.el.p(
+                    f"Order #{task['order_id']}", class_name="font-bold text-gray-800"
+                ),
+                rx.el.p(task["customer_name"], class_name="text-sm text-gray-600"),
+            ),
+            status_badge(task["status"]),
+            class_name="flex justify-between items-start mb-2",
+        ),
+        rx.el.div(
+            rx.el.p(task["worker_name"], class_name="font-semibold"),
+            rx.el.p(
+                task["task_type"].capitalize(), class_name="text-sm text-purple-600"
+            ),
+            class_name="mt-2 pt-2 border-t",
+        ),
+        rx.el.div(
+            rx.el.p(
+                f"Due: {rx.cond(task['due_date'], task['due_date'].to_string().split('T')[0], 'N/A')}",
+                class_name="text-xs text-gray-500",
+            ),
+            rx.el.div(
+                rx.cond(
+                    task["status"] == "pending",
+                    rx.el.button(
+                        "Start",
+                        on_click=lambda: TaskState.update_task_status(
+                            task["task_id"], "in_progress"
+                        ),
+                        class_name="px-3 py-1.5 text-xs bg-blue-100 text-blue-700 rounded-md font-semibold",
+                    ),
+                    None,
+                ),
+                rx.cond(
+                    task["status"] == "in_progress",
+                    rx.el.button(
+                        "Complete",
+                        on_click=lambda: TaskState.update_task_status(
+                            task["task_id"], "completed"
+                        ),
+                        class_name="px-3 py-1.5 text-xs bg-green-100 text-green-700 rounded-md font-semibold",
+                    ),
+                    None,
+                ),
+                class_name="flex gap-2 justify-end",
+            ),
+            class_name="flex justify-between items-center mt-3 pt-3 border-t",
+        ),
+        class_name="bg-white p-4 rounded-xl shadow-sm border border-gray-100",
+    )
+
+
 def task_row(task: rx.Var[dict]) -> rx.Component:
     return rx.el.tr(
         rx.el.td(f"#{task['order_id']}", class_name="px-6 py-4 font-medium"),
@@ -102,6 +157,10 @@ def productivity_page() -> rx.Component:
                 ),
                 rx.el.div(
                     rx.el.div(
+                        rx.foreach(TaskState.filtered_tasks, task_card),
+                        class_name="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:hidden",
+                    ),
+                    rx.el.div(
                         rx.el.div(
                             rx.el.table(
                                 rx.el.thead(
@@ -161,9 +220,9 @@ def productivity_page() -> rx.Component:
                             ),
                             None,
                         ),
-                        class_name="overflow-hidden border border-gray-200 rounded-xl",
+                        class_name="hidden md:block overflow-hidden border border-gray-200 rounded-xl",
                     ),
-                    class_name="bg-white p-4 md:p-6 rounded-xl shadow-sm",
+                    class_name="md:bg-white md:p-4 md:p-6 rounded-xl shadow-sm",
                 ),
                 class_name="flex-1 p-4 md:p-8 overflow-auto",
             ),

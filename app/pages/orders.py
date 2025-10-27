@@ -107,6 +107,85 @@ def order_row(order: rx.Var[dict]) -> rx.Component:
     )
 
 
+def order_card(order: rx.Var[dict]) -> rx.Component:
+    priority_class = rx.match(
+        order["priority"].to_string(),
+        ("urgent", f"border-l-4 {PRIORITY_COLORS['urgent']}"),
+        ("high", f"border-l-4 {PRIORITY_COLORS['high']}"),
+        PRIORITY_COLORS["standard"],
+    )
+    return rx.el.div(
+        rx.el.div(
+            rx.el.div(
+                rx.el.p(
+                    f"Order #{order['order_id']}", class_name="font-bold text-gray-800"
+                ),
+                status_badge(order["status"]),
+                class_name="flex justify-between items-center mb-1",
+            ),
+            rx.el.p(order["customer_name"], class_name="text-sm text-gray-600"),
+        ),
+        rx.el.div(
+            rx.el.div(
+                rx.el.p("Order Date", class_name="text-xs text-gray-500"),
+                rx.el.p(
+                    order["order_date"].to_string().split("T")[0],
+                    class_name="font-medium",
+                ),
+            ),
+            rx.el.div(
+                rx.el.p("Delivery Date", class_name="text-xs text-gray-500"),
+                rx.el.p(
+                    rx.cond(
+                        order["delivery_date"],
+                        order["delivery_date"].to_string().split("T")[0],
+                        "N/A",
+                    ),
+                    class_name="font-medium",
+                ),
+            ),
+            class_name="grid grid-cols-2 gap-4 mt-3 pt-3 border-t",
+        ),
+        rx.el.div(
+            rx.el.div(
+                rx.el.p("Total", class_name="text-xs text-gray-500"),
+                rx.el.p(f"⁷{order['total_amount']}", class_name="font-semibold"),
+            ),
+            rx.el.div(
+                rx.el.p("Balance", class_name="text-xs text-gray-500"),
+                rx.el.p(
+                    f"⁷{order['balance_payment']}", class_name="font-bold text-red-600"
+                ),
+            ),
+            class_name="grid grid-cols-2 gap-4 mt-2",
+        ),
+        rx.el.div(
+            rx.el.button(
+                rx.icon("camera", class_name="h-4 w-4"),
+                on_click=lambda: PhotoState.open_photo_uploader(
+                    "order_photo", order["order_id"]
+                ),
+                class_name="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-md",
+            ),
+            rx.el.button(
+                rx.icon("file-pen-line", class_name="h-4 w-4"),
+                class_name="p-2 text-gray-500 hover:text-purple-600 hover:bg-purple-50 rounded-md",
+            ),
+            rx.el.button(
+                rx.icon("trash-2", class_name="h-4 w-4"),
+                class_name="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-md",
+            ),
+            rx.el.button(
+                rx.icon("copy", class_name="h-4 w-4"),
+                on_click=lambda: OrderState.duplicate_order(order["order_id"]),
+                class_name="p-2 text-gray-500 hover:text-green-600 hover:bg-green-50 rounded-md",
+            ),
+            class_name="flex items-center justify-end gap-1 mt-3 pt-3 border-t",
+        ),
+        class_name=f"bg-white p-4 rounded-xl shadow-sm border {priority_class} hover:shadow-md transition-shadow",
+    )
+
+
 def orders_page() -> rx.Component:
     return rx.el.div(
         sidebar(),
@@ -160,6 +239,10 @@ def orders_page() -> rx.Component:
                 ),
                 rx.el.div(
                     rx.el.div(
+                        rx.foreach(OrderState.filtered_orders, order_card),
+                        class_name="grid grid-cols-1 gap-4 md:hidden",
+                    ),
+                    rx.el.div(
                         rx.el.div(
                             rx.el.table(
                                 rx.el.thead(
@@ -208,28 +291,28 @@ def orders_page() -> rx.Component:
                             ),
                             class_name="overflow-x-auto",
                         ),
-                        rx.cond(
-                            OrderState.filtered_orders.length() == 0,
-                            rx.el.div(
-                                rx.icon(
-                                    "shopping-cart",
-                                    class_name="h-12 w-12 text-gray-400 mb-4",
-                                ),
-                                rx.el.h3(
-                                    "No Orders Yet",
-                                    class_name="text-lg font-semibold text-gray-700",
-                                ),
-                                rx.el.p(
-                                    "Create your first order to get started.",
-                                    class_name="text-gray-500 mt-1",
-                                ),
-                                class_name="text-center py-16",
-                            ),
-                            None,
-                        ),
-                        class_name="border border-gray-200 rounded-xl",
+                        class_name="hidden md:block border border-gray-200 rounded-xl",
                     ),
-                    class_name="bg-white p-2 md:p-6 rounded-xl shadow-sm",
+                    rx.cond(
+                        OrderState.filtered_orders.length() == 0,
+                        rx.el.div(
+                            rx.icon(
+                                "shopping-cart",
+                                class_name="h-12 w-12 text-gray-400 mb-4",
+                            ),
+                            rx.el.h3(
+                                "No Orders Yet",
+                                class_name="text-lg font-semibold text-gray-700",
+                            ),
+                            rx.el.p(
+                                "Create your first order to get started.",
+                                class_name="text-gray-500 mt-1",
+                            ),
+                            class_name="text-center py-16 bg-white rounded-xl shadow-sm",
+                        ),
+                        None,
+                    ),
+                    class_name="md:bg-white p-2 md:p-6 rounded-xl shadow-sm",
                 ),
                 order_form(),
                 photo_upload_dialog(),

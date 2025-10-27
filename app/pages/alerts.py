@@ -3,6 +3,55 @@ from app.states.alert_state import AlertState, AlertSetting
 from app.components.sidebar import sidebar
 
 
+def alert_setting_card(setting: rx.Var[dict]) -> rx.Component:
+    return rx.el.div(
+        rx.el.div(
+            rx.el.div(
+                rx.el.p(
+                    setting["alert_type"].replace("_", " ").capitalize(),
+                    class_name="font-bold text-gray-800",
+                ),
+                rx.el.span(
+                    rx.cond(setting["enabled"], "Enabled", "Disabled"),
+                    class_name=rx.cond(
+                        setting["enabled"],
+                        "px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-700",
+                        "px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-700",
+                    ),
+                ),
+                class_name="flex items-center gap-2",
+            ),
+            rx.el.button(
+                rx.icon("copy", class_name="h-4 w-4"),
+                on_click=lambda: AlertState.start_editing(setting),
+                class_name="p-2 text-gray-500 hover:text-purple-600 hover:bg-purple-50 rounded-md",
+            ),
+            class_name="flex justify-between items-start",
+        ),
+        rx.el.div(
+            rx.el.div(
+                rx.el.p("Threshold", class_name="text-xs text-gray-500"),
+                rx.el.p(
+                    rx.cond(
+                        setting["threshold_value"] > 0,
+                        setting["threshold_value"].to_string(),
+                        "N/A",
+                    ),
+                    class_name="font-semibold",
+                ),
+            ),
+            rx.el.div(
+                rx.el.p("Method", class_name="text-xs text-gray-500"),
+                rx.el.p(
+                    setting["notification_method"].upper(), class_name="font-semibold"
+                ),
+            ),
+            class_name="grid grid-cols-2 gap-4 mt-3 pt-3 border-t text-center",
+        ),
+        class_name="bg-white p-4 rounded-xl shadow-sm border border-gray-100",
+    )
+
+
 def alert_setting_row(setting: rx.Var[dict]) -> rx.Component:
     return rx.el.tr(
         rx.el.td(
@@ -39,6 +88,28 @@ def alert_setting_row(setting: rx.Var[dict]) -> rx.Component:
             class_name="px-6 py-4 text-center",
         ),
         class_name="border-b bg-white hover:bg-gray-50/50",
+    )
+
+
+def alert_history_card(history: rx.Var[dict]) -> rx.Component:
+    return rx.el.div(
+        rx.el.div(
+            rx.el.p(
+                history["alert_type"].replace("_", " ").capitalize(),
+                class_name="font-semibold text-gray-800",
+            ),
+            rx.el.p(
+                history["severity"].capitalize(),
+                class_name="text-sm font-medium text-orange-600",
+            ),
+            class_name="flex justify-between items-start",
+        ),
+        rx.el.p(history["message"], class_name="text-sm text-gray-600 mt-1"),
+        rx.el.p(
+            history["triggered_at"].to_string().split("T")[0],
+            class_name="text-xs text-gray-400 mt-2 text-right",
+        ),
+        class_name="bg-white p-4 rounded-xl shadow-sm border border-gray-100",
     )
 
 
@@ -208,7 +279,11 @@ def alerts_page() -> rx.Component:
                             ),
                             class_name="overflow-x-auto",
                         ),
-                        class_name="overflow-hidden border border-gray-200 rounded-xl",
+                        class_name="hidden md:block overflow-hidden border border-gray-200 rounded-xl",
+                    ),
+                    rx.el.div(
+                        rx.foreach(AlertState.alert_settings, alert_setting_card),
+                        class_name="grid grid-cols-1 sm:grid-cols-2 gap-4 md:hidden",
                     ),
                     class_name="bg-white p-6 rounded-xl shadow-sm mb-8",
                 ),
@@ -249,7 +324,11 @@ def alerts_page() -> rx.Component:
                             ),
                             class_name="overflow-x-auto",
                         ),
-                        class_name="overflow-hidden border border-gray-200 rounded-xl",
+                        class_name="hidden md:block overflow-hidden border border-gray-200 rounded-xl",
+                    ),
+                    rx.el.div(
+                        rx.foreach(AlertState.alert_history, alert_history_card),
+                        class_name="grid grid-cols-1 sm:grid-cols-2 gap-4 md:hidden",
                     ),
                     class_name="bg-white p-6 rounded-xl shadow-sm",
                 ),
