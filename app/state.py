@@ -415,8 +415,14 @@ ORDER BY o.order_date DESC""")
 
     @rx.event(background=True)
     async def update_order_status(self, order_id: int, new_status: str):
-        from app.utils.sms import send_order_ready_notification
-        from app.utils.whatsapp import send_whatsapp_order_ready
+        from app.utils.sms import (
+            send_order_ready_notification,
+            send_status_update_notification,
+        )
+        from app.utils.whatsapp import (
+            send_whatsapp_order_ready,
+            send_whatsapp_status_update,
+        )
 
         if new_status == "cutting":
             async with rx.asession() as session:
@@ -495,53 +501,158 @@ ORDER BY o.order_date DESC""")
                 )
                 await session.commit()
                 yield rx.toast.success("Materials deducted and costs updated.")
-        async with rx.asession() as session:
+        async with rx.asession() as session, session.begin():
             await session.execute(
                 text("UPDATE orders SET status = :status WHERE order_id = :order_id"),
                 {"status": new_status, "order_id": order_id},
             )
-            await session.commit()
+            if new_status.lower() == "delivered":
+                order_res = await session.execute(
+                    text(
+                        "SELECT customer_id, total_amount FROM orders WHERE order_id = :id"
+                    ),
+                    {"id": order_id},
+                )
+                order_info = order_res.mappings().first()
+                if order_info:
+                    customer_id = order_info["customer_id"]
+                    total_amount = float(order_info["total_amount"])
+                    points_earned = int(total_amount / 100)
+                    cust_res = await session.execute(
+                        text(
+                            "SELECT total_points, customer_tier, referred_by FROM customers WHERE customer_id = :cid"
+                        ),
+                        {"cid": customer_id},
+                    )
+                    customer_data = cust_res.mappings().first()
+                    current_points = customer_data["total_points"]
+                    new_total_points = current_points + points_earned
+                    current_tier = customer_data["customer_tier"]
+                    new_tier = current_tier
+                    if new_total_points > 2000 and current_tier != "vip":
+                        new_tier = "vip"
+                    elif new_total_points > 500 and current_tier not in [
+                        "vip",
+                        "regular",
+                    ]:
+                        new_tier = "regular"
+                    await session.execute(
+                        text(
+                            "UPDATE customers SET total_points = :points, customer_tier = :tier WHERE customer_id = :cid"
+                        ),
+                        {
+                            "points": new_total_points,
+                            "tier": new_tier,
+                            "cid": customer_id,
+                        },
+                    )
+                    await session.execute(
+                        text("""INSERT INTO loyalty_points (customer_id, points_change, new_balance, transaction_type, order_id, description)
+                             VALUES (:cid, :points, :balance, 'purchase', :oid, :desc)"""),
+                        {
+                            "cid": customer_id,
+                            "points": points_earned,
+                            "balance": new_total_points,
+                            "oid": order_id,
+                            "desc": f"Points earned from order #{order_id}",
+                        },
+                    )
+                    if new_tier != current_tier:
+                        yield rx.toast.info(
+                            f"Customer promoted to {new_tier.capitalize()} tier!"
+                        )
+                    if customer_data["referred_by"]:
+                        referral_check = await session.execute(
+                            text("""SELECT referral_id, referrer_customer_id, reward_points 
+                                     FROM customer_referrals 
+                                     WHERE referred_customer_id = :referred_id AND referral_status = 'pending'"""),
+                            {"referred_id": customer_id},
+                        )
+                        referral_info = referral_check.mappings().first()
+                        order_count_check = await session.execute(
+                            text(
+                                "SELECT COUNT(*) FROM orders WHERE customer_id = :cid AND status = 'delivered'"
+                            ),
+                            {"cid": customer_id},
+                        )
+                        completed_orders_count = order_count_check.scalar_one()
+                        if referral_info and completed_orders_count == 1:
+                            referrer_id = referral_info["referrer_customer_id"]
+                            reward_points = referral_info["reward_points"]
+                            referrer_cust_res = await session.execute(
+                                text(
+                                    "SELECT name, total_points FROM customers WHERE customer_id = :rid"
+                                ),
+                                {"rid": referrer_id},
+                            )
+                            referrer_data = referrer_cust_res.mappings().first()
+                            new_referrer_points = (
+                                referrer_data["total_points"] + reward_points
+                            )
+                            await session.execute(
+                                text(
+                                    "UPDATE customers SET total_points = :points WHERE customer_id = :rid"
+                                ),
+                                {"points": new_referrer_points, "rid": referrer_id},
+                            )
+                            await session.execute(
+                                text("""INSERT INTO loyalty_points (customer_id, points_change, new_balance, transaction_type, description)
+                                     VALUES (:cid, :points, :balance, 'referral', :desc)"""),
+                                {
+                                    "cid": referrer_id,
+                                    "points": reward_points,
+                                    "balance": new_referrer_points,
+                                    "desc": f"Referral bonus for {customer_data['name']}",
+                                },
+                            )
+                            await session.execute(
+                                text("""UPDATE customer_referrals 
+                                     SET referral_status = 'completed', completed_date = :date, order_completed = TRUE
+                                     WHERE referral_id = :ref_id"""),
+                                {
+                                    "date": datetime.date.today(),
+                                    "ref_id": referral_info["referral_id"],
+                                },
+                            )
+                            yield rx.toast.success(
+                                f"Referrer {referrer_data['name']} awarded {reward_points} points!"
+                            )
         async with self:
             yield OrderState.get_orders
         yield rx.toast.info(f"Order #{order_id} status updated to {new_status}.")
-        if new_status.lower() == "ready":
-            async with rx.asession() as session:
-                result = await session.execute(
-                    text("""SELECT c.name, c.phone_number, c.opt_in_whatsapp, c.prefer_whatsapp 
-                             FROM customers c JOIN orders o ON c.customer_id = o.customer_id 
-                             WHERE o.order_id = :order_id"""),
-                    {"order_id": order_id},
-                )
-                customer_info = result.mappings().first()
-            if customer_info:
-                notification_preference = customer_info.get("prefer_whatsapp", "sms")
+        async with rx.asession() as session:
+            result = await session.execute(
+                text("""SELECT c.name, c.phone_number, c.opt_in_whatsapp, c.prefer_whatsapp 
+                         FROM customers c JOIN orders o ON c.customer_id = o.customer_id 
+                         WHERE o.order_id = :order_id"""),
+                {"order_id": order_id},
+            )
+            customer_info = result.mappings().first()
+        if customer_info:
+            notification_preference = customer_info.get("prefer_whatsapp", "sms")
+            customer_phone = customer_info["phone_number"]
+            customer_name = customer_info["name"]
+            opt_in_whatsapp = customer_info.get("opt_in_whatsapp")
+            if new_status.lower() == "ready":
                 if notification_preference in ["sms", "both"]:
-                    sms_sent = send_order_ready_notification(
-                        customer_phone=customer_info["phone_number"],
-                        customer_name=customer_info["name"],
-                        order_id=order_id,
+                    send_order_ready_notification(
+                        customer_phone, customer_name, order_id
                     )
-                    if not sms_sent:
-                        yield rx.toast.error(
-                            f"Failed to send 'order ready' SMS for order #{order_id}."
-                        )
-                if customer_info.get("opt_in_whatsapp") and notification_preference in [
-                    "whatsapp",
-                    "both",
-                ]:
-                    wa_sent = send_whatsapp_order_ready(
-                        customer_phone=customer_info["phone_number"],
-                        customer_name=customer_info["name"],
-                        order_id=order_id,
-                    )
-                    if not wa_sent:
-                        yield rx.toast.error(
-                            f"Failed to send 'order ready' WhatsApp for order #{order_id}."
-                        )
+                if opt_in_whatsapp and notification_preference in ["whatsapp", "both"]:
+                    send_whatsapp_order_ready(customer_phone, customer_name, order_id)
             else:
-                yield rx.toast.error(
-                    f"Could not find customer details for order #{order_id} to send notification."
-                )
+                if notification_preference in ["sms", "both"]:
+                    send_status_update_notification(
+                        customer_phone, customer_name, order_id, new_status
+                    )
+                if opt_in_whatsapp and notification_preference in ["whatsapp", "both"]:
+                    send_whatsapp_status_update(
+                        customer_phone, customer_name, order_id, new_status
+                    )
+        else:
+            yield rx.toast.error(
+                f"Could not find customer details for order #{order_id} to send notification."
+            )
 
     @rx.event(background=True)
     async def duplicate_order(self, order_id: int):

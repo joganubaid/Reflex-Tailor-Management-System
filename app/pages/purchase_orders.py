@@ -25,6 +25,37 @@ def status_badge(status: rx.Var[str]) -> rx.Component:
     )
 
 
+def suggested_po_card(suggested_po: rx.Var[dict]) -> rx.Component:
+    return rx.el.div(
+        rx.el.div(
+            rx.el.p(
+                suggested_po["supplier_name"], class_name="font-bold text-gray-800"
+            ),
+            rx.el.span(
+                f"{suggested_po['item_count']} items",
+                class_name="text-sm text-gray-500",
+            ),
+            class_name="flex justify-between items-center",
+        ),
+        rx.el.div(
+            rx.el.div(
+                rx.el.p("Est. Total", class_name="text-xs text-gray-500"),
+                rx.el.p(
+                    f"₹{suggested_po['total_amount'].to_string()}",
+                    class_name="font-bold text-purple-600",
+                ),
+            ),
+            rx.el.button(
+                "Create PO",
+                on_click=lambda: PurchaseOrderState.create_suggested_po(suggested_po),
+                class_name="flex items-center bg-purple-600 text-white px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-purple-700",
+            ),
+            class_name="flex justify-between items-center mt-3 pt-3 border-t",
+        ),
+        class_name="bg-purple-50 p-4 rounded-xl border border-purple-200 shadow-sm",
+    )
+
+
 def po_card(po: rx.Var[dict]) -> rx.Component:
     return rx.el.div(
         rx.el.div(
@@ -275,6 +306,23 @@ def purchase_orders_page() -> rx.Component:
                         class_name="text-gray-500 mt-1",
                     ),
                     class_name="mb-8",
+                ),
+                rx.cond(
+                    PurchaseOrderState.suggested_pos.length() > 0,
+                    rx.el.div(
+                        rx.el.h2(
+                            "Suggested Purchase Orders",
+                            class_name="text-xl font-semibold text-gray-700 mb-4",
+                        ),
+                        rx.el.div(
+                            rx.foreach(
+                                PurchaseOrderState.suggested_pos, suggested_po_card
+                            ),
+                            class_name="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4",
+                        ),
+                        class_name="mb-8",
+                    ),
+                    rx.fragment(),
                 ),
                 rx.el.div(
                     rx.el.div(class_name="flex-1"),

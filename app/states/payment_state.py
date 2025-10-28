@@ -109,17 +109,56 @@ class PaymentState(rx.State):
 
     @rx.event(background=True)
     async def mark_as_paid(self, installment_id: int):
+        from app.state import OrderState
+
         async with rx.asession() as session:
-            await session.execute(
+            result = await session.execute(
                 text("""UPDATE payment_installments 
                      SET status = 'paid', paid_date = :paid_date
-                     WHERE installment_id = :installment_id"""),
+                     WHERE installment_id = :installment_id
+                     RETURNING order_id"""),
                 {"installment_id": installment_id, "paid_date": datetime.date.today()},
             )
+            order_id = result.scalar_one_or_none()
             await session.commit()
+            if not order_id:
+                yield rx.toast.error("Failed to update payment. Order not found.")
+                return
+            balance_result = await session.execute(
+                text("SELECT balance_payment FROM orders WHERE order_id = :order_id"),
+                {"order_id": order_id},
+            )
+            current_balance = balance_result.scalar_one_or_none() or 0.0
+            installment_result = await session.execute(
+                text(
+                    "SELECT amount FROM payment_installments WHERE installment_id = :installment_id"
+                ),
+                {"installment_id": installment_id},
+            )
+            paid_amount = installment_result.scalar_one_or_none() or 0.0
+            new_balance = max(0, float(current_balance) - float(paid_amount))
+            await session.execute(
+                text(
+                    "UPDATE orders SET balance_payment = :balance WHERE order_id = :order_id"
+                ),
+                {"balance": new_balance, "order_id": order_id},
+            )
+            await session.commit()
+            if new_balance == 0:
+                async with self:
+                    order_state = await self.get_state(OrderState)
+                status_result = await session.execute(
+                    text("SELECT status FROM orders WHERE order_id = :order_id"),
+                    {"order_id": order_id},
+                )
+                current_status = status_result.scalar_one()
+                if current_status not in ["finishing", "ready", "delivered"]:
+                    await order_state.update_order_status(order_id, "finishing")
+                yield rx.toast.success("Order fully paid! Status updated.")
+            else:
+                yield rx.toast.success(f"Installment #{installment_id} marked as paid.")
         async with self:
             yield PaymentState.get_all_installments
-            yield rx.toast.success(f"Installment #{installment_id} marked as paid.")
 
     @rx.event(background=True)
     async def send_reminder_sms(self, installment: PaymentInstallment):

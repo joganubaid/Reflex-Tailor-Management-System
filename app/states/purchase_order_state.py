@@ -22,11 +22,20 @@ class PurchaseOrder(BaseModel):
     total_amount: float
 
 
+class SuggestedPO(BaseModel):
+    supplier_id: int
+    supplier_name: str
+    total_amount: float
+    item_count: int
+    items: list[PurchaseOrderItem]
+
+
 class PurchaseOrderState(rx.State):
     purchase_orders: list[PurchaseOrder] = []
     available_suppliers: list[Supplier] = []
     available_materials: list[Material] = []
     low_stock_materials: list[Material] = []
+    suggested_pos: list[SuggestedPO] = []
     show_po_form: bool = False
     selected_supplier_id: str = ""
     expected_delivery_date: str = ""
@@ -90,11 +99,50 @@ class PurchaseOrderState(rx.State):
     async def check_low_stock_materials(self):
         async with rx.asession() as session:
             result = await session.execute(
-                text("SELECT * FROM materials WHERE quantity_in_stock <= reorder_level")
+                text("""SELECT m.*, s.supplier_id, s.name as supplier_name
+                     FROM materials m 
+                     LEFT JOIN material_suppliers ms ON m.material_id = ms.material_id AND ms.is_preferred = TRUE
+                     LEFT JOIN suppliers s ON ms.supplier_id = s.supplier_id
+                     WHERE m.quantity_in_stock <= m.reorder_level""")
             )
+            low_stock_items = [dict(row) for row in result.mappings().all()]
+            suggestions = {}
+            for item in low_stock_items:
+                reorder_qty = float(item["reorder_level"] * 2)
+                supplier_id = item.get("supplier_id") or 0
+                supplier_name = item.get("supplier_name") or "Unassigned"
+                if supplier_id not in suggestions:
+                    suggestions[supplier_id] = {
+                        "supplier_id": supplier_id,
+                        "supplier_name": supplier_name,
+                        "items": [],
+                        "total_amount": 0,
+                    }
+                po_item = PurchaseOrderItem(
+                    material_id=item["material_id"],
+                    material_name=item["material_name"],
+                    quantity=reorder_qty,
+                    unit_price=float(item["unit_price"]),
+                )
+                suggestions[supplier_id]["items"].append(po_item)
+                suggestions[supplier_id]["total_amount"] += (
+                    po_item.quantity * po_item.unit_price
+                )
+            suggested_pos = []
+            for sup_id, po_data in suggestions.items():
+                suggested_pos.append(
+                    SuggestedPO(
+                        supplier_id=sup_id,
+                        supplier_name=po_data["supplier_name"],
+                        items=po_data["items"],
+                        total_amount=po_data["total_amount"],
+                        item_count=len(po_data["items"]),
+                    )
+                )
             async with self:
+                self.suggested_pos = suggested_pos
                 self.low_stock_materials = [
-                    cast(Material, dict(row)) for row in result.mappings().all()
+                    cast(Material, item) for item in low_stock_items
                 ]
 
     @rx.event
@@ -120,12 +168,28 @@ class PurchaseOrderState(rx.State):
     def on_material_select(self, material_id_str: str):
         self.selected_material_id = material_id_str
         material_id = int(material_id_str)
-        material = next(
-            (m for m in self.available_materials if m["material_id"] == material_id),
-            None,
-        )
-        if material:
-            self.item_unit_price = float(material.get("unit_price") or 0.0)
+
+    def _reset_po_form(self):
+        self.selected_supplier_id = ""
+        self.expected_delivery_date = ""
+        self.po_notes = ""
+        self.po_items = []
+        self._reset_item_fields()
+
+    def _reset_item_fields(self):
+        self.selected_material_id = ""
+        self.item_quantity = 1.0
+        self.item_unit_price = 0.0
+
+    @rx.event
+    def create_suggested_po(self, suggested_po: SuggestedPO):
+        self.selected_supplier_id = str(suggested_po.supplier_id)
+        self.po_items = suggested_po.items
+        self.expected_delivery_date = (
+            datetime.date.today() + datetime.timedelta(days=7)
+        ).isoformat()
+        self.show_po_form = True
+        return PurchaseOrderState.load_po_form_data
 
     @rx.event
     def add_po_item(self, form_data: dict):

@@ -64,5 +64,21 @@ def send_payment_reminder(
     customer_phone: str, customer_name: str, order_id: int, due_date: str, amount: float
 ) -> bool:
     """Sends a payment reminder SMS."""
-    message = f"Hi {customer_name}, a friendly reminder from TailorFlow. Your payment of ₹{amount:.2f} for order #{order_id} is due on {due_date}. Please make the payment on time. Thank you!"
+    message = f"Hi {customer_name}, a friendly reminder from TailorFlow. Your payment of ⁷{amount:.2f} for order #{order_id} is due on {due_date}. Please make the payment on time. Thank you!"
     return _send_sms(customer_phone, message)
+
+
+def send_status_update_notification(
+    customer_phone: str, customer_name: str, order_id: int, new_status: str
+) -> bool:
+    """Sends an SMS with the new order status."""
+    status_messages = {
+        "cutting": f"Hi {customer_name}, your order #{order_id} has entered the cutting stage.",
+        "stitching": f"Hi {customer_name}, good news! Your order #{order_id} is now being stitched.",
+        "finishing": f"Hi {customer_name}, your order #{order_id} is in the final finishing stage.",
+        "delivered": f"Hi {customer_name}, your order #{order_id} has been delivered. Thank you for your business!",
+    }
+    message = status_messages.get(new_status.lower())
+    if message:
+        return _send_sms(customer_phone, message)
+    return False
