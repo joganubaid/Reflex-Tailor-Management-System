@@ -49,9 +49,9 @@ class WorkerState(rx.State):
     async def handle_form_submit(self, form_data: dict):
         form_data["active_status"] = form_data.get("active_status") == "on"
         if self.is_editing:
-            return WorkerState.update_worker(form_data)
+            yield WorkerState.update_worker(form_data)
         else:
-            return WorkerState.add_worker(form_data)
+            yield WorkerState.add_worker(form_data)
 
     @rx.event
     async def add_worker(self, form_data: dict):

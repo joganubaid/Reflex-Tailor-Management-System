@@ -67,6 +67,9 @@ class Order(TypedDict):
     order_template_id: int | None
     is_duplicate: bool | None
     original_order_id: int | None
+    coupon_code: str | None
+    discount_amount: float | None
+    points_earned: int | None
 
 
 class OrderWithCustomerName(Order):

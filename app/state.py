@@ -11,6 +11,15 @@ from app.models import (
 )
 import datetime
 from sqlalchemy import text, func, select
+import logging
+
+MATERIAL_REQUIREMENTS = {
+    "shirt": {"fabric": 2.5, "button": 8, "thread": 1},
+    "pant": {"fabric": 1.8, "zipper": 1, "thread": 1},
+    "suit": {"fabric": 4.0, "button": 12, "zipper": 1, "thread": 2},
+    "blouse": {"fabric": 1.5, "button": 6, "thread": 1},
+    "dress": {"fabric": 3.5, "zipper": 1, "thread": 1},
+}
 
 
 class BaseState(rx.State):
@@ -304,6 +313,28 @@ ORDER BY o.order_date DESC""")
         from app.utils.sms import send_order_confirmation
         from app.utils.whatsapp import send_whatsapp_order_confirmation
 
+        cloth_type = form_data["cloth_type"]
+        quantity = int(form_data.get("quantity", 1))
+        required_mats = MATERIAL_REQUIREMENTS.get(cloth_type, {})
+        async with rx.asession() as session:
+            for material_type, req_qty in required_mats.items():
+                total_req = req_qty * quantity
+                result = await session.execute(
+                    text(
+                        "SELECT quantity_in_stock, material_name FROM materials WHERE material_type = :type AND material_name ILIKE :name_pattern LIMIT 1"
+                    ),
+                    {"type": material_type, "name_pattern": f"%{material_type}%"},
+                )
+                material = result.mappings().first()
+                if not material or material["quantity_in_stock"] < total_req:
+                    available_qty = material["quantity_in_stock"] if material else 0
+                    material_name = (
+                        material["material_name"] if material else material_type
+                    )
+                    yield rx.toast.error(
+                        f"Insufficient stock for {material_name.capitalize()}. Required: {total_req}, Available: {available_qty}"
+                    )
+                    return
         customer_id = int(form_data["customer_id"])
         total_amount = float(form_data.get("total_amount", 0))
         advance_payment = float(form_data.get("advance_payment", 0))
@@ -387,13 +418,91 @@ ORDER BY o.order_date DESC""")
         from app.utils.sms import send_order_ready_notification
         from app.utils.whatsapp import send_whatsapp_order_ready
 
-        async with self, rx.asession() as session:
+        if new_status == "cutting":
+            async with rx.asession() as session:
+                order_res = await session.execute(
+                    text(
+                        "SELECT cloth_type, quantity FROM orders WHERE order_id = :order_id"
+                    ),
+                    {"order_id": order_id},
+                )
+                order = order_res.mappings().first()
+                if not order:
+                    yield rx.toast.error(f"Order #{order_id} not found.")
+                    return
+                required_mats = MATERIAL_REQUIREMENTS.get(order["cloth_type"], {})
+                total_material_cost = 0.0
+                for material_type, req_qty in required_mats.items():
+                    total_req = req_qty * order["quantity"]
+                    mat_res = await session.execute(
+                        text(
+                            "SELECT material_id, quantity_in_stock, unit_price, material_name FROM materials WHERE material_type = :type AND material_name ILIKE :name_pattern LIMIT 1"
+                        ),
+                        {"type": material_type, "name_pattern": f"%{material_type}%"},
+                    )
+                    material = mat_res.mappings().first()
+                    if not material or material["quantity_in_stock"] < total_req:
+                        available = material["quantity_in_stock"] if material else 0
+                        mat_name = (
+                            material["material_name"] if material else material_type
+                        )
+                        yield rx.toast.error(
+                            f"Cannot start cutting. Insufficient {mat_name.capitalize()}. Required: {total_req}, Available: {available}"
+                        )
+                        return
+                for material_type, req_qty in required_mats.items():
+                    total_req = req_qty * order["quantity"]
+                    mat_res = await session.execute(
+                        text(
+                            "SELECT material_id, quantity_in_stock, unit_price, reorder_level FROM materials WHERE material_type = :type AND material_name ILIKE :name_pattern LIMIT 1"
+                        ),
+                        {"type": material_type, "name_pattern": f"%{material_type}%"},
+                    )
+                    material = mat_res.mappings().first()
+                    await session.execute(
+                        text(
+                            "UPDATE materials SET quantity_in_stock = quantity_in_stock - :used WHERE material_id = :mat_id"
+                        ),
+                        {"used": total_req, "mat_id": material["material_id"]},
+                    )
+                    wastage = total_req * 0.05
+                    cost = total_req * material["unit_price"]
+                    total_material_cost += cost
+                    await session.execute(
+                        text(
+                            "INSERT INTO order_materials (order_id, material_id, quantity_used, wastage, cost) VALUES (:oid, :mid, :qty, :wst, :cst)"
+                        ),
+                        {
+                            "oid": order_id,
+                            "mid": material["material_id"],
+                            "qty": total_req,
+                            "wst": wastage,
+                            "cst": cost,
+                        },
+                    )
+                    if (
+                        material["quantity_in_stock"] - total_req
+                        < material["reorder_level"]
+                    ):
+                        yield rx.toast.warning(
+                            f"{material_type.capitalize()} stock is now below reorder level!"
+                        )
+                await session.execute(
+                    text(
+                        "UPDATE orders SET material_cost = :cost, profit = total_amount - :cost - labor_cost WHERE order_id = :id"
+                    ),
+                    {"cost": total_material_cost, "id": order_id},
+                )
+                await session.commit()
+                yield rx.toast.success("Materials deducted and costs updated.")
+        async with rx.asession() as session:
             await session.execute(
                 text("UPDATE orders SET status = :status WHERE order_id = :order_id"),
                 {"status": new_status, "order_id": order_id},
             )
             await session.commit()
-        yield OrderState.get_orders
+        async with self:
+            yield OrderState.get_orders
         yield rx.toast.info(f"Order #{order_id} status updated to {new_status}.")
         if new_status.lower() == "ready":
             async with rx.asession() as session:
@@ -561,9 +670,9 @@ ORDER BY c.name""")
     @rx.event
     async def handle_form_submit(self, form_data: dict):
         if self.is_editing:
-            return CustomerState.update_customer(form_data)
+            yield CustomerState.update_customer(form_data)
         else:
-            return CustomerState.add_customer(form_data)
+            yield CustomerState.add_customer(form_data)
 
     @rx.event
     def toggle_form(self):
