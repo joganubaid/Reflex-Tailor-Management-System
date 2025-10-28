@@ -19,8 +19,8 @@ class ProfitAnalysisState(rx.State):
         async with rx.asession() as session:
             metrics_result = await session.execute(
                 text("""SELECT 
-                        SUM(total_amount) as total_revenue, 
-                        SUM(material_cost + labor_cost) as total_costs,
+                        SUM(total_amount - discount_amount) as total_revenue, 
+                        SUM(COALESCE(material_cost, 0) + COALESCE(labor_cost, 0)) as total_costs,
                         SUM(profit) as net_profit
                      FROM orders WHERE status = 'delivered'""")
             )
@@ -28,8 +28,8 @@ class ProfitAnalysisState(rx.State):
             trend_result = await session.execute(
                 text("""SELECT 
                         TO_CHAR(delivery_date, 'YYYY-MM') as month,
-                        SUM(total_amount) as revenue,
-                        SUM(material_cost + labor_cost) as costs,
+                        SUM(total_amount - discount_amount) as revenue,
+                        SUM(COALESCE(material_cost, 0) + COALESCE(labor_cost, 0)) as costs,
                         SUM(profit) as profit
                      FROM orders
                      WHERE status = 'delivered' AND delivery_date IS NOT NULL

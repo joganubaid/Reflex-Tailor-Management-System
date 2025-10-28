@@ -428,7 +428,7 @@ ORDER BY o.order_date DESC""")
             async with rx.asession() as session:
                 order_res = await session.execute(
                     text(
-                        "SELECT cloth_type, quantity FROM orders WHERE order_id = :order_id"
+                        "SELECT cloth_type, quantity, assigned_worker FROM orders WHERE order_id = :order_id"
                     ),
                     {"order_id": order_id},
                 )
@@ -436,6 +436,15 @@ ORDER BY o.order_date DESC""")
                 if not order:
                     yield rx.toast.error(f"Order #{order_id} not found.")
                     return
+                labor_cost = 0.0
+                if order["assigned_worker"]:
+                    worker_res = await session.execute(
+                        text("SELECT salary FROM workers WHERE worker_id = :worker_id"),
+                        {"worker_id": order["assigned_worker"]},
+                    )
+                    worker = worker_res.mappings().first()
+                    if worker:
+                        labor_cost = float(worker["salary"]) * 0.01
                 required_mats = MATERIAL_REQUIREMENTS.get(order["cloth_type"], {})
                 total_material_cost = 0.0
                 for material_type, req_qty in required_mats.items():
@@ -495,9 +504,13 @@ ORDER BY o.order_date DESC""")
                         )
                 await session.execute(
                     text(
-                        "UPDATE orders SET material_cost = :cost, profit = total_amount - :cost - labor_cost WHERE order_id = :id"
+                        "UPDATE orders SET material_cost = :material_cost, labor_cost = :labor_cost, profit = total_amount - :material_cost - :labor_cost WHERE order_id = :id"
                     ),
-                    {"cost": total_material_cost, "id": order_id},
+                    {
+                        "material_cost": total_material_cost,
+                        "labor_cost": labor_cost,
+                        "id": order_id,
+                    },
                 )
                 await session.commit()
                 yield rx.toast.success("Materials deducted and costs updated.")
