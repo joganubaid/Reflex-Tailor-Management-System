@@ -207,6 +207,13 @@ def order_card(order: rx.Var[dict]) -> rx.Component:
                 on_click=lambda: OrderState.duplicate_order(order["order_id"]),
                 class_name="p-2 text-gray-500 hover:text-green-600 hover:bg-green-50 rounded-md",
             ),
+            rx.el.div(
+                rx.el.button(
+                    rx.icon("qr-code", class_name="h-4 w-4"),
+                    on_click=lambda: OrderState.generate_qr_code(order["order_id"]),
+                    class_name="p-2 text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-md",
+                )
+            ),
             class_name="flex items-center justify-end gap-1 mt-3 pt-3 border-t",
         ),
         class_name=f"bg-white p-4 rounded-xl shadow-sm border {priority_class} hover:shadow-md transition-shadow",

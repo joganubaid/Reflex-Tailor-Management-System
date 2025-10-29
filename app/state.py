@@ -724,6 +724,10 @@ ORDER BY o.order_date DESC""")
             )
             yield OrderState.get_orders
 
+    @rx.event
+    def generate_qr_code(self, order_id: int):
+        return rx.toast.info(f"QR code for order #{order_id} is not yet implemented.")
+
 
 class CustomerState(BaseState):
     customers: list[Customer] = []

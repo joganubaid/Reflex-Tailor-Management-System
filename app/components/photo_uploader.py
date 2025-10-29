@@ -41,6 +41,16 @@ def photo_gallery_card(photo: rx.Var[dict]) -> rx.Component:
                 ),
                 class_name="flex justify-between items-center mt-2",
             ),
+            rx.el.div(
+                rx.el.button(
+                    rx.icon("send", class_name="h-4 w-4"),
+                    on_click=lambda: PhotoState.send_photo_for_approval(
+                        photo["photo_id"]
+                    ),
+                    class_name="p-1 text-blue-500 hover:bg-blue-100 rounded-full",
+                ),
+                class_name="flex justify-end items-center mt-2",
+            ),
             class_name="p-3",
         ),
         class_name="border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow bg-white",
