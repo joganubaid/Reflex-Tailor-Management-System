@@ -199,6 +199,8 @@ ORDER BY o.order_date DESC""")
     @rx.event(background=True)
     async def on_customer_selected(self, customer_id_str: str):
         """Load customer's latest measurements when selected"""
+        from app.state import CustomerState
+
         if not customer_id_str:
             return
         customer_id = int(customer_id_str)
@@ -248,6 +250,11 @@ ORDER BY o.order_date DESC""")
                 yield rx.toast.info("Previous measurements loaded!")
             else:
                 self._reset_measurements()
+        async with self:
+            customer_state = await self.get_state(CustomerState)
+            yield customer_state.get_pricing_suggestion(
+                customer_id, self.order_total_amount
+            )
 
     @rx.event(background=True)
     async def load_workers_with_workload(self):
@@ -714,6 +721,44 @@ class CustomerState(BaseState):
     notes: str = ""
     opt_in_whatsapp: bool = False
     prefer_whatsapp: str = "sms"
+    customer_lifetime_value: float = 0.0
+    suggested_discount_percent: float = 0.0
+
+    @rx.event(background=True)
+    async def get_pricing_suggestion(self, customer_id: int, order_amount: float):
+        async with rx.asession() as session:
+            result = await session.execute(
+                text(
+                    "SELECT customer_tier, SUM(o.total_amount) as total_spent FROM customers c LEFT JOIN orders o ON c.customer_id = o.customer_id WHERE c.customer_id = :customer_id GROUP BY c.customer_id, c.customer_tier"
+                ),
+                {"customer_id": customer_id},
+            )
+            customer_data = result.mappings().first()
+        async with self:
+            if not customer_data:
+                self.suggested_discount_percent = 0.0
+                self.customer_lifetime_value = 0.0
+                return
+            self.customer_lifetime_value = float(customer_data["total_spent"] or 0.0)
+            tier = customer_data["customer_tier"]
+            if tier == "vip":
+                self.suggested_discount_percent = 10.0
+                reason = "VIP Customer Discount"
+            elif tier == "regular":
+                self.suggested_discount_percent = 5.0
+                reason = "Loyal Customer Discount"
+            else:
+                self.suggested_discount_percent = 0.0
+                reason = "Standard Pricing"
+            discount_amount = order_amount * (self.suggested_discount_percent / 100)
+            final_amount = order_amount - discount_amount
+            order_state = await self.get_state(OrderState)
+            order_state.suggested_discount = discount_amount
+            order_state.suggested_price = final_amount
+            self.show_pricing_suggestion = True
+        yield rx.toast.info(
+            f"Pricing Suggestion: {self.suggested_discount_percent}% off ({reason})"
+        )
 
     @rx.event(background=True)
     async def get_customers(self):

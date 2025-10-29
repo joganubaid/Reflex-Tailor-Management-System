@@ -1,8 +1,15 @@
 import reflex as rx
-from typing import cast, Any
+from typing import cast, TypedDict
 from app.models import PaymentInstallment, OrderWithCustomerName
 from sqlalchemy import text
 import datetime
+
+
+class SuggestedCreditTerms(TypedDict):
+    score: float
+    rating: str
+    advance_free_eligible: bool
+    max_credit_days: int
 
 
 class PaymentState(rx.State):
@@ -16,6 +23,77 @@ class PaymentState(rx.State):
     due_date: str = ""
     notes: str = ""
     search_query: str = ""
+    customer_credit_scores: dict[int, float] = {}
+    credit_terms_available: dict[int, bool] = {}
+    suggested_credit_terms: SuggestedCreditTerms = {}
+
+    async def _calculate_payment_punctuality(self, customer_id: int) -> float:
+        async with rx.asession() as session:
+            result = await session.execute(
+                text("""SELECT pi.due_date, pi.paid_date 
+                       FROM payment_installments pi
+                       JOIN orders o ON pi.order_id = o.order_id
+                       WHERE o.customer_id = :customer_id AND pi.status = 'paid'"""),
+                {"customer_id": customer_id},
+            )
+            installments = result.mappings().all()
+        if not installments:
+            return 100.0
+        on_time_payments = sum(
+            (
+                1
+                for i in installments
+                if i["paid_date"]
+                and i["due_date"]
+                and (i["paid_date"] <= i["due_date"])
+            )
+        )
+        return on_time_payments / len(installments) * 100
+
+    @rx.event(background=True)
+    async def update_customer_credit_score(self, customer_id: int):
+        punctuality = await self._calculate_payment_punctuality(customer_id)
+        async with rx.asession() as session:
+            result = await session.execute(
+                text(
+                    "SELECT customer_tier FROM customers WHERE customer_id = :customer_id"
+                ),
+                {"customer_id": customer_id},
+            )
+            customer = result.mappings().first()
+        if not customer:
+            return
+        tier = customer["customer_tier"]
+        tier_bonus = {"vip": 30, "regular": 20, "new": 10}.get(tier, 0)
+        score = punctuality * 0.7 + tier_bonus
+        async with self:
+            self.customer_credit_scores[customer_id] = score
+            self.credit_terms_available[customer_id] = score > 80
+
+    @rx.event(background=True)
+    async def get_credit_terms_suggestion(self, customer_id: int):
+        async with self:
+            if customer_id not in self.customer_credit_scores:
+                yield PaymentState.update_customer_credit_score(customer_id)
+        async with self:
+            score = self.customer_credit_scores.get(customer_id, 0)
+            if score > 90:
+                rating, max_credit_days = ("Excellent", 30)
+            elif score > 70:
+                rating, max_credit_days = ("Good", 15)
+            elif score > 50:
+                rating, max_credit_days = ("Fair", 7)
+            else:
+                rating, max_credit_days = ("Poor", 0)
+            self.suggested_credit_terms = {
+                "score": score,
+                "rating": rating,
+                "advance_free_eligible": self.credit_terms_available.get(
+                    customer_id, False
+                ),
+                "max_credit_days": max_credit_days,
+            }
+        yield rx.toast.info(f"Credit suggestion loaded for customer #{customer_id}")
 
     @rx.var
     def filtered_installments(self) -> list[PaymentInstallment]:

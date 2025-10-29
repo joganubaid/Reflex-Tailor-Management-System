@@ -16,6 +16,7 @@ def status_badge(is_active: rx.Var[bool]) -> rx.Component:
 
 
 def worker_row(worker: rx.Var[dict]) -> rx.Component:
+    specializations = WorkerState.worker_specializations.get(worker["worker_id"], [])
     return rx.el.tr(
         rx.el.td(
             worker["worker_name"], class_name="px-6 py-4 font-medium text-gray-900"
@@ -30,7 +31,21 @@ def worker_row(worker: rx.Var[dict]) -> rx.Component:
         ),
         rx.el.td(worker["role"].capitalize(), class_name="px-6 py-4 text-gray-600"),
         rx.el.td(
-            f"₹{worker['salary'].to_string()}", class_name="px-6 py-4 text-gray-600"
+            rx.cond(
+                specializations.length() > 0,
+                rx.el.div(
+                    rx.foreach(
+                        specializations,
+                        lambda s: rx.el.span(
+                            s.capitalize(),
+                            class_name="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded-full",
+                        ),
+                    ),
+                    class_name="flex flex-wrap gap-1",
+                ),
+                rx.el.span("Generalist", class_name="text-gray-500"),
+            ),
+            class_name="px-6 py-4",
         ),
         rx.el.td(status_badge(worker["active_status"]), class_name="px-6 py-4"),
         rx.el.td(
@@ -116,7 +131,7 @@ def workers_page() -> rx.Component:
                                             class_name="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider",
                                         ),
                                         rx.el.th(
-                                            "Salary",
+                                            "Specialization",
                                             class_name="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider",
                                         ),
                                         rx.el.th(

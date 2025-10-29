@@ -18,6 +18,8 @@ class WorkerState(rx.State):
     role: str = "tailor"
     salary: float = 0.0
     active_status: bool = True
+    worker_performance: list[dict] = []
+    worker_specializations: dict[int, list[str]] = {}
 
     @rx.event(background=True)
     async def get_workers(self):
@@ -25,13 +27,44 @@ class WorkerState(rx.State):
             result = await session.execute(
                 text("""SELECT w.*, COUNT(o.order_id) AS orders_assigned
                      FROM workers w
-                     LEFT JOIN orders o ON w.worker_id = o.assigned_worker
+                     LEFT JOIN orders o ON w.worker_id = o.assigned_worker AND o.status NOT IN ('delivered', 'cancelled')
                      GROUP BY w.worker_id
                      ORDER BY w.worker_name""")
             )
             rows = result.mappings().all()
             async with self:
                 self.workers = [cast(Worker, dict(row)) for row in rows]
+        await self.calculate_worker_performance()
+
+    @rx.event(background=True)
+    async def calculate_worker_performance(self):
+        async with rx.asession() as session:
+            performance_result = await session.execute(
+                text("""
+                SELECT 
+                    worker_id, 
+                    cloth_type, 
+                    COUNT(*) as total_completed,
+                    AVG(EXTRACT(DAY FROM (completed_date - assigned_date))) as avg_completion_days
+                FROM worker_tasks
+                WHERE status = 'completed' AND completed_date IS NOT NULL
+                GROUP BY worker_id, cloth_type
+                """)
+            )
+            performance_data = [
+                dict(row) for row in performance_result.mappings().all()
+            ]
+            specializations = {}
+            for p in performance_data:
+                worker_id = p["worker_id"]
+                if worker_id not in specializations:
+                    specializations[worker_id] = []
+                if p["avg_completion_days"] <= 3 and p["total_completed"] > 2:
+                    if p["cloth_type"] not in specializations[worker_id]:
+                        specializations[worker_id].append(p["cloth_type"])
+            async with self:
+                self.worker_performance = performance_data
+                self.worker_specializations = specializations
 
     @rx.var
     def filtered_workers(self) -> list[Worker]:
@@ -124,6 +157,30 @@ class WorkerState(rx.State):
         self.role = "tailor"
         self.salary = 0.0
         self.active_status = True
+
+    @rx.event
+    def get_recommended_worker(self, cloth_type: str) -> dict | None:
+        if not self.workers:
+            return None
+        specialists = [
+            w
+            for w in self.workers
+            if w["worker_id"] in self.worker_specializations
+            and cloth_type in self.worker_specializations[w["worker_id"]]
+        ]
+        if specialists:
+            best_worker = min(specialists, key=lambda w: w["orders_assigned"])
+            reason = f"Specialized in {cloth_type.capitalize()}, {best_worker['orders_assigned']} active orders"
+        else:
+            best_worker = min(self.workers, key=lambda w: w["orders_assigned"])
+            reason = (
+                f"Lowest workload with {best_worker['orders_assigned']} active orders"
+            )
+        return {
+            "worker_id": best_worker["worker_id"],
+            "worker_name": best_worker["worker_name"],
+            "reason": reason,
+        }
 
     @rx.event
     def show_delete_confirmation(self, worker: Worker):

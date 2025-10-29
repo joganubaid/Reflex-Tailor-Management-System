@@ -31,6 +31,88 @@ class ReportState(rx.State):
     gst_summary: dict = {}
     taxable_sales: float = 0.0
     total_gst_collected: float = 0.0
+    seasonal_patterns: list[dict] = []
+    material_predictions: list[dict] = []
+    bulk_purchase_suggestions: list[dict] = []
+
+    @rx.event(background=True)
+    async def analyze_seasonal_patterns(self):
+        async with rx.asession() as session:
+            result = await session.execute(
+                text("""SELECT TO_CHAR(order_date, 'YYYY-MM') as month, COUNT(order_id) as order_count
+                     FROM orders
+                     WHERE order_date >= CURRENT_DATE - INTERVAL '2 years'
+                     GROUP BY month
+                     ORDER BY month""")
+            )
+            monthly_data = {
+                row["month"]: row["order_count"] for row in result.mappings().all()
+            }
+            if not monthly_data:
+                async with self:
+                    self.seasonal_patterns = []
+                return
+            avg_orders = sum(monthly_data.values()) / len(monthly_data)
+            peak_threshold = avg_orders * 1.2
+            patterns = []
+            for month, count in monthly_data.items():
+                patterns.append(
+                    {
+                        "month": month,
+                        "order_count": count,
+                        "is_peak": count > peak_threshold,
+                        "avg_orders": avg_orders,
+                    }
+                )
+            async with self:
+                self.seasonal_patterns = patterns
+
+    @rx.event(background=True)
+    async def predict_material_requirements(self, target_month: str):
+        year, month = map(int, target_month.split("-"))
+        last_year_month = f"{year - 1}-{month:02d}"
+        async with rx.asession() as session:
+            result = await session.execute(
+                text("""SELECT m.material_name, SUM(om.quantity_used) as total_used
+                     FROM order_materials om
+                     JOIN orders o ON om.order_id = o.order_id
+                     JOIN materials m ON om.material_id = m.material_id
+                     WHERE TO_CHAR(o.order_date, 'YYYY-MM') = :last_year_month
+                     GROUP BY m.material_name"""),
+                {"last_year_month": last_year_month},
+            )
+            predictions = [dict(row) for row in result.mappings().all()]
+            async with self:
+                self.material_predictions = predictions
+
+    @rx.event(background=True)
+    async def get_bulk_purchase_recommendations(self):
+        async with self:
+            if not self.seasonal_patterns:
+                await self.analyze_seasonal_patterns()
+        avg_orders = (
+            sum((p["order_count"] for p in self.seasonal_patterns))
+            / len(self.seasonal_patterns)
+            if self.seasonal_patterns
+            else 0
+        )
+        low_demand_months = [
+            p["month"]
+            for p in self.seasonal_patterns
+            if p["order_count"] < avg_orders * 0.8
+        ]
+        if not low_demand_months:
+            async with self:
+                self.bulk_purchase_suggestions = []
+            return
+        recommendations = [
+            {
+                "recommendation": f"Consider buying essential materials in bulk during off-peak months: {', '.join(low_demand_months)}.",
+                "potential_savings": "5-15% on bulk orders.",
+            }
+        ]
+        async with self:
+            self.bulk_purchase_suggestions = recommendations
 
     @rx.event
     def set_report_dates(self):
@@ -143,3 +225,5 @@ class ReportState(rx.State):
             yield ReportState.get_wastage_analysis
             yield ReportState.get_seasonal_trends
             yield ReportState.get_gst_report
+            yield ReportState.analyze_seasonal_patterns()
+            yield ReportState.get_bulk_purchase_recommendations()

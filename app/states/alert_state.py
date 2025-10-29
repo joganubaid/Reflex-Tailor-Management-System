@@ -25,8 +25,18 @@ class AlertHistory(TypedDict):
 class AlertState(rx.State):
     alert_settings: list[AlertSetting] = []
     alert_history: list[AlertHistory] = []
-    editing_setting: AlertSetting | None = None
+    editing_setting: dict | None = None
     show_edit_dialog: bool = False
+
+    @rx.var
+    def editing_setting_title(self) -> str:
+        if self.editing_setting:
+            return (
+                self.editing_setting.get("alert_type", "")
+                .replace("_", " ")
+                .capitalize()
+            )
+        return ""
 
     @rx.event(background=True)
     async def load_page_data(self):
@@ -39,7 +49,11 @@ class AlertState(rx.State):
             )
             async with self:
                 self.alert_settings = [
-                    cast(AlertSetting, dict(row))
+                    {
+                        **dict(row),
+                        "threshold_value": float(row.get("threshold_value") or 0.0),
+                        "recipients": row.get("recipients") or "",
+                    }
                     for row in settings_result.mappings().all()
                 ]
                 self.alert_history = [
@@ -48,8 +62,15 @@ class AlertState(rx.State):
                 ]
 
     @rx.event
-    def start_editing(self, setting: AlertSetting):
-        self.editing_setting = setting
+    def start_editing(self, setting: dict):
+        self.editing_setting = {
+            "setting_id": setting.get("setting_id"),
+            "alert_type": str(setting.get("alert_type", "")),
+            "enabled": bool(setting.get("enabled", False)),
+            "threshold_value": float(setting.get("threshold_value") or 0.0),
+            "notification_method": str(setting.get("notification_method", "sms")),
+            "recipients": str(setting.get("recipients") or ""),
+        }
         self.show_edit_dialog = True
 
     @rx.event

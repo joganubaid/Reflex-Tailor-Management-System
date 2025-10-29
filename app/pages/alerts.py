@@ -8,7 +8,7 @@ def alert_setting_card(setting: rx.Var[dict]) -> rx.Component:
         rx.el.div(
             rx.el.div(
                 rx.el.p(
-                    setting["alert_type"].replace("_", " ").capitalize(),
+                    setting.get("alert_type", "").replace("_", " ").capitalize(),
                     class_name="font-bold text-gray-800",
                 ),
                 rx.el.span(
@@ -33,8 +33,8 @@ def alert_setting_card(setting: rx.Var[dict]) -> rx.Component:
                 rx.el.p("Threshold", class_name="text-xs text-gray-500"),
                 rx.el.p(
                     rx.cond(
-                        setting["threshold_value"] > 0,
-                        setting["threshold_value"].to_string(),
+                        setting.get("threshold_value") | 0 > 0,
+                        setting.get("threshold_value", 0).to_string(),
                         "N/A",
                     ),
                     class_name="font-semibold",
@@ -43,7 +43,8 @@ def alert_setting_card(setting: rx.Var[dict]) -> rx.Component:
             rx.el.div(
                 rx.el.p("Method", class_name="text-xs text-gray-500"),
                 rx.el.p(
-                    setting["notification_method"].upper(), class_name="font-semibold"
+                    setting.get("notification_method", "").upper(),
+                    class_name="font-semibold",
                 ),
             ),
             class_name="grid grid-cols-2 gap-4 mt-3 pt-3 border-t text-center",
@@ -55,7 +56,7 @@ def alert_setting_card(setting: rx.Var[dict]) -> rx.Component:
 def alert_setting_row(setting: rx.Var[dict]) -> rx.Component:
     return rx.el.tr(
         rx.el.td(
-            setting["alert_type"].replace("_", " ").capitalize(),
+            setting.get("alert_type", "").replace("_", " ").capitalize(),
             class_name="px-6 py-4 font-medium text-gray-900",
         ),
         rx.el.td(
@@ -71,14 +72,19 @@ def alert_setting_row(setting: rx.Var[dict]) -> rx.Component:
         ),
         rx.el.td(
             rx.cond(
-                setting["threshold_value"] > 0,
-                setting["threshold_value"].to_string(),
+                setting.get("threshold_value") | 0 > 0,
+                setting.get("threshold_value", 0).to_string(),
                 "N/A",
             ),
             class_name="px-6 py-4",
         ),
-        rx.el.td(setting["notification_method"].upper(), class_name="px-6 py-4"),
-        rx.el.td(setting["recipients"], class_name="px-6 py-4 text-sm text-gray-600"),
+        rx.el.td(
+            setting.get("notification_method", "").upper(), class_name="px-6 py-4"
+        ),
+        rx.el.td(
+            setting.get("recipients") | "-",
+            class_name="px-6 py-4 text-sm text-gray-600",
+        ),
         rx.el.td(
             rx.el.button(
                 rx.icon("copy", class_name="h-4 w-4"),
@@ -135,18 +141,20 @@ def edit_alert_dialog() -> rx.Component:
                 rx.dialog.title(
                     "Edit Alert Setting", class_name="text-2xl font-bold mb-4"
                 ),
-                rx.el.p(
-                    AlertState.editing_setting["alert_type"]
-                    .replace("_", " ")
-                    .capitalize(),
-                    class_name="text-gray-600 mb-6",
+                rx.cond(
+                    AlertState.editing_setting,
+                    rx.el.p(
+                        AlertState.editing_setting_title,
+                        class_name="text-gray-600 mb-6",
+                    ),
+                    rx.fragment(),
                 ),
                 rx.el.div(
                     rx.el.label("Enabled", class_name="flex items-center gap-2"),
                     rx.el.input(
                         type="checkbox",
                         name="enabled",
-                        checked=AlertState.editing_setting["enabled"],
+                        checked=AlertState.editing_setting.get("enabled", False),
                     ),
                     class_name="mb-4",
                 ),
@@ -156,9 +164,9 @@ def edit_alert_dialog() -> rx.Component:
                     ),
                     rx.el.input(
                         name="threshold_value",
-                        default_value=AlertState.editing_setting[
-                            "threshold_value"
-                        ].to_string(),
+                        default_value=AlertState.editing_setting.get(
+                            "threshold_value", 0
+                        ).to_string(),
                         type="number",
                         class_name="w-full p-2 border rounded mt-1",
                     ),
@@ -173,7 +181,9 @@ def edit_alert_dialog() -> rx.Component:
                         rx.el.option("Email", value="email"),
                         rx.el.option("Both", value="both"),
                         name="notification_method",
-                        value=AlertState.editing_setting["notification_method"],
+                        value=AlertState.editing_setting.get(
+                            "notification_method", "sms"
+                        ),
                         class_name="w-full p-2 border rounded mt-1",
                     ),
                     class_name="mb-4",
@@ -185,7 +195,7 @@ def edit_alert_dialog() -> rx.Component:
                     ),
                     rx.el.textarea(
                         name="recipients",
-                        default_value=AlertState.editing_setting["recipients"],
+                        default_value=AlertState.editing_setting.get("recipients", ""),
                         class_name="w-full p-2 border rounded mt-1",
                     ),
                     class_name="mb-6",
