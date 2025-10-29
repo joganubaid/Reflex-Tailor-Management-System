@@ -1,9 +1,11 @@
 import reflex as rx
 from app.state import OrderState
 from app.states.photo_state import PhotoState
+from app.states.order_completion_state import OrderCompletionState
 from app.components.sidebar import sidebar, mobile_header
 from app.components.order_form import order_form
 from app.components.photo_uploader import photo_upload_dialog
+from app.components.order_completion_dialog import order_completion_dialog
 
 STATUS_COLORS = {
     "pending": "bg-red-100 text-red-800",
@@ -88,7 +90,19 @@ def order_row(order: rx.Var[dict]) -> rx.Component:
                 ),
                 rx.el.button(
                     rx.icon("file-pen-line", class_name="h-4 w-4"),
+                    on_click=lambda: OrderState.start_editing_order(order),
                     class_name="p-2 text-gray-500 hover:text-purple-600 hover:bg-purple-50 rounded-md",
+                ),
+                rx.cond(
+                    order["status"] == "ready",
+                    rx.el.button(
+                        rx.icon("square_check", class_name="h-4 w-4"),
+                        on_click=lambda: OrderCompletionState.start_completion(
+                            order["order_id"]
+                        ),
+                        class_name="p-2 text-gray-500 hover:text-green-600 hover:bg-green-50 rounded-md",
+                    ),
+                    rx.fragment(),
                 ),
                 rx.el.button(
                     rx.icon("trash-2", class_name="h-4 w-4"),
@@ -160,6 +174,18 @@ def order_card(order: rx.Var[dict]) -> rx.Component:
             class_name="grid grid-cols-2 gap-4 mt-2",
         ),
         rx.el.div(
+            rx.cond(
+                order["status"] == "ready",
+                rx.el.button(
+                    rx.icon("square_check", class_name="h-5 w-5"),
+                    "Complete",
+                    on_click=lambda: OrderCompletionState.start_completion(
+                        order["order_id"]
+                    ),
+                    class_name="flex items-center text-sm font-semibold bg-green-100 text-green-700 px-3 py-1.5 rounded-lg hover:bg-green-200 w-full justify-center",
+                ),
+                rx.fragment(),
+            ),
             rx.el.button(
                 rx.icon("camera", class_name="h-4 w-4"),
                 on_click=lambda: PhotoState.open_photo_uploader(
@@ -169,6 +195,7 @@ def order_card(order: rx.Var[dict]) -> rx.Component:
             ),
             rx.el.button(
                 rx.icon("file-pen-line", class_name="h-4 w-4"),
+                on_click=lambda: OrderState.start_editing_order(order),
                 class_name="p-2 text-gray-500 hover:text-purple-600 hover:bg-purple-50 rounded-md",
             ),
             rx.el.button(
@@ -316,6 +343,7 @@ def orders_page() -> rx.Component:
                 ),
                 order_form(),
                 photo_upload_dialog(),
+                order_completion_dialog(),
                 class_name="flex-1 p-4 md:p-8 overflow-auto",
             ),
             class_name="flex flex-col w-full",

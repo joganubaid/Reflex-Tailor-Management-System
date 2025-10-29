@@ -283,7 +283,7 @@ ORDER BY o.order_date DESC""")
         async with rx.asession() as session:
             customer_result = await session.execute(
                 text(
-                    "SELECT customer_id, name, phone_number FROM customers ORDER BY name"
+                    "SELECT customer_id, name, phone_number, prefer_whatsapp, opt_in_whatsapp FROM customers ORDER BY name"
                 )
             )
             async with self:
@@ -296,6 +296,25 @@ ORDER BY o.order_date DESC""")
     @rx.event
     def on_cloth_type_changed(self, cloth_type: str):
         self.selected_cloth_type = cloth_type
+
+    @rx.event
+    def start_editing_order(self, order: dict):
+        self.is_editing_order = True
+        self.editing_order_id = order["order_id"]
+        self.selected_customer_id = str(order["customer_id"])
+        self.selected_cloth_type = order["cloth_type"]
+        self.order_quantity = order["quantity"]
+        self.order_delivery_date = (
+            str(order["delivery_date"]).split(" ")[0] if order["delivery_date"] else ""
+        )
+        self.order_total_amount = float(order.get("total_amount", 0.0))
+        self.order_advance_payment = float(order.get("advance_payment", 0.0))
+        self.order_special_instructions = order.get("special_instructions") or ""
+        self.order_priority = order.get("priority", "standard")
+        self.applied_coupon_code = order.get("coupon_code") or ""
+        self.coupon_discount = float(order.get("discount_amount") or 0.0)
+        self.show_order_form = True
+        return OrderState.on_customer_selected(order["customer_id"])
 
     @rx.event
     def calculate_balance(self, value: Any):
@@ -723,6 +742,9 @@ class CustomerState(BaseState):
     prefer_whatsapp: str = "sms"
     customer_lifetime_value: float = 0.0
     suggested_discount_percent: float = 0.0
+    show_pricing_suggestion: bool = False
+    suggested_discount: float = 0.0
+    suggested_price: float = 0.0
 
     @rx.event(background=True)
     async def get_pricing_suggestion(self, customer_id: int, order_amount: float):

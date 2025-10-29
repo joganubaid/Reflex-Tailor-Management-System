@@ -26,6 +26,7 @@ from app.states.task_state import TaskState
 from app.states.expense_state import ExpenseState
 from app.states.alert_state import AlertState
 from app.states.mobile_nav_state import MobileNavState
+from app.states.order_completion_state import OrderCompletionState
 from app.pages.suppliers import suppliers_page
 from app.pages.purchase_orders import purchase_orders_page
 from app.pages.loyalty import loyalty_page
