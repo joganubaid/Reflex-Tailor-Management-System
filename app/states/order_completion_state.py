@@ -252,8 +252,8 @@ class OrderCompletionState(rx.State):
                     attachment_path=pdf_path,
                     attachment_filename=pdf_path.split("/")[-1],
                 )
-                if email_sent:
-                    notification_channels.append("Email Invoice")
+        if email_sent:
+            notification_channels.append("Email Invoice")
         async with self:
             self.notification_channels = notification_channels
             self.is_processing = False
@@ -262,3 +262,8 @@ class OrderCompletionState(rx.State):
             payment_state = await self.get_state(PaymentState)
             yield order_state.get_orders
             yield payment_state.get_all_installments
+        import asyncio
+
+        await asyncio.sleep(5)
+        async with self:
+            self.show_completion_dialog = False
