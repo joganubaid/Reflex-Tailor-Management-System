@@ -19,7 +19,7 @@ else:
 def _send_sms(to: str, body: str) -> bool:
     """Sends an SMS message using Twilio."""
     if not client:
-        logging.error("Twilio client is not initialized. Cannot send SMS.")
+        logging.warning("Twilio client is not initialized. Cannot send SMS.")
         return False
     if not to.startswith("+"):
         to = f"+91{to}"
