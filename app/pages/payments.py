@@ -81,7 +81,7 @@ def installment_row(installment: rx.Var[dict]) -> rx.Component:
                         on_click=lambda: PaymentState.send_reminder_sms(installment),
                         class_name="flex items-center px-3 py-1.5 text-xs font-medium text-blue-600 border border-blue-200 rounded-md hover:bg-blue-50",
                     ),
-                    None,
+                    rx.fragment(),
                 ),
                 class_name="flex items-center gap-2",
             ),
