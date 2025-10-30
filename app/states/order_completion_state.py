@@ -204,18 +204,30 @@ class OrderCompletionState(rx.State):
         customer_name = self.customer_details["name"]
         customer_phone = self.customer_details["phone_number"]
         notification_channels = []
+        from app.utils.razorpay import create_payment_link
+
+        payment_link = create_payment_link(
+            amount=float(paid_amount),
+            description=f"Payment for Order #{order_id}",
+            customer_name=customer_name,
+            customer_contact=customer_phone,
+            customer_email=self.customer_details.get("email"),
+            order_id=order_id,
+        )
+        if payment_link:
+            notification_channels.append("Payment Link")
         if form_data.get("send_sms") == "on":
             from app.utils.sms import send_status_update_notification
 
             if send_status_update_notification(
-                customer_phone, customer_name, order_id, "delivered"
+                customer_phone, customer_name, order_id, "delivered", payment_link
             ):
                 notification_channels.append("SMS")
         if form_data.get("send_whatsapp") == "on":
             from app.utils.whatsapp import send_whatsapp_status_update
 
             if send_whatsapp_status_update(
-                customer_phone, customer_name, order_id, "delivered"
+                customer_phone, customer_name, order_id, "delivered", payment_link
             ):
                 notification_channels.append("WhatsApp")
         from app.utils.pdf import generate_invoice_pdf

@@ -69,16 +69,23 @@ def send_payment_reminder(
 
 
 def send_status_update_notification(
-    customer_phone: str, customer_name: str, order_id: int, new_status: str
+    customer_phone: str,
+    customer_name: str,
+    order_id: int,
+    new_status: str,
+    payment_link: str | None = None,
 ) -> bool:
     """Sends an SMS with the new order status."""
-    status_messages = {
-        "cutting": f"Hi {customer_name}, your order #{order_id} has entered the cutting stage.",
-        "stitching": f"Hi {customer_name}, good news! Your order #{order_id} is now being stitched.",
-        "finishing": f"Hi {customer_name}, your order #{order_id} is in the final finishing stage.",
-        "delivered": f"Hi {customer_name}, your order #{order_id} has been delivered. Thank you for your business!",
-    }
-    message = status_messages.get(new_status.lower())
-    if message:
-        return _send_sms(customer_phone, message)
-    return False
+    base_message = f"Hi {customer_name}, your order #{order_id} has been {new_status}."
+    if new_status == "delivered" and payment_link:
+        message = f"{base_message} You can complete your payment here: {payment_link}. Thank you for your business!"
+    elif new_status == "delivered":
+        message = f"{base_message} Thank you for your business!"
+    else:
+        status_messages = {
+            "cutting": f"Hi {customer_name}, your order #{order_id} has entered the cutting stage.",
+            "stitching": f"Hi {customer_name}, good news! Your order #{order_id} is now being stitched.",
+            "finishing": f"Hi {customer_name}, your order #{order_id} is in the final finishing stage. It will be ready soon!",
+        }
+        message = status_messages.get(new_status.lower(), base_message)
+    return _send_sms(customer_phone, message)

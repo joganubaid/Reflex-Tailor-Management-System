@@ -72,19 +72,28 @@ def send_whatsapp_order_photo(
 
 
 def send_whatsapp_status_update(
-    customer_phone: str, customer_name: str, order_id: int, new_status: str
+    customer_phone: str,
+    customer_name: str,
+    order_id: int,
+    new_status: str,
+    payment_link: str | None = None,
 ) -> bool:
     """Sends an order status update via WhatsApp."""
-    status_messages = {
-        "cutting": f"Hi {customer_name}, your order *#{order_id}* has entered the *cutting* stage. We'll keep you updated!",
-        "stitching": f"Hi {customer_name}, good news! Your order *#{order_id}* is now being *stitched*.",
-        "finishing": f"Hi {customer_name}, your order *#{order_id}* is in the final *finishing* stage. It will be ready soon!",
-        "delivered": f"Hi {customer_name}, your order *#{order_id}* has been delivered. Thank you for choosing TailorFlow!",
-    }
-    message = status_messages.get(new_status.lower())
-    if message:
-        return _send_whatsapp_message(customer_phone, message)
-    return False
+    base_message = (
+        f"Hi {customer_name}, your order *#{order_id}* is now *{new_status}*."
+    )
+    if new_status == "delivered" and payment_link:
+        message = f"{base_message}\n\nYou can complete your payment here: {payment_link}\n\nThank you for choosing TailorFlow!"
+    elif new_status == "delivered":
+        message = f"{base_message} Thank you for choosing TailorFlow!"
+    else:
+        status_messages = {
+            "cutting": f"Hi {customer_name}, your order *#{order_id}* has entered the *cutting* stage. We'll keep you updated!",
+            "stitching": f"Hi {customer_name}, good news! Your order *#{order_id}* is now being *stitched*.",
+            "finishing": f"Hi {customer_name}, your order *#{order_id}* is in the final *finishing* stage. It will be ready soon!",
+        }
+        message = status_messages.get(new_status.lower(), base_message)
+    return _send_whatsapp_message(customer_phone, message)
 
 
 def send_whatsapp_order_photo_for_approval(
