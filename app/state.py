@@ -743,7 +743,7 @@ class CustomerState(BaseState):
     address: str = ""
     notes: str = ""
     opt_in_whatsapp: bool = False
-    prefer_whatsapp: str = "sms"
+    prefer_whatsapp: bool = False
     customer_lifetime_value: float = 0.0
     suggested_discount_percent: float = 0.0
     show_pricing_suggestion: bool = False
@@ -826,7 +826,7 @@ ORDER BY c.name""")
                     "notes": form_data.get("notes", ""),
                     "registration_date": datetime.date.today(),
                     "opt_in_whatsapp": form_data.get("opt_in_whatsapp") == "on",
-                    "prefer_whatsapp": form_data.get("prefer_whatsapp", "sms"),
+                    "prefer_whatsapp": form_data.get("prefer_whatsapp") == "on",
                 },
             )
             await session.commit()
@@ -852,7 +852,7 @@ ORDER BY c.name""")
                     "address": form_data.get("address", ""),
                     "notes": form_data.get("notes", ""),
                     "opt_in_whatsapp": form_data.get("opt_in_whatsapp") == "on",
-                    "prefer_whatsapp": form_data.get("prefer_whatsapp", "sms"),
+                    "prefer_whatsapp": form_data.get("prefer_whatsapp") == "on",
                     "customer_id": self.editing_customer_id,
                 },
             )
@@ -885,7 +885,7 @@ ORDER BY c.name""")
         self.address = customer["address"] or ""
         self.notes = customer.get("notes") or ""
         self.opt_in_whatsapp = customer.get("opt_in_whatsapp", False)
-        self.prefer_whatsapp = str(customer.get("prefer_whatsapp", "sms"))
+        self.prefer_whatsapp = bool(customer.get("prefer_whatsapp", False))
         self.show_form = True
 
     def _reset_form_fields(self):
@@ -896,7 +896,7 @@ ORDER BY c.name""")
         self.notes = ""
         self.editing_customer_id = None
         self.opt_in_whatsapp = False
-        self.prefer_whatsapp = "sms"
+        self.prefer_whatsapp = False
 
     @rx.event
     def show_delete_confirmation(self, customer: Customer):
