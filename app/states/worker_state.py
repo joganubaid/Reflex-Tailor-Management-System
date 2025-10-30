@@ -41,14 +41,15 @@ class WorkerState(rx.State):
         async with rx.asession() as session:
             performance_result = await session.execute(
                 text("""
-                SELECT 
-                    worker_id, 
-                    cloth_type, 
-                    COUNT(*) as total_completed,
-                    AVG(EXTRACT(DAY FROM (completed_date - assigned_date))) as avg_completion_days
-                FROM worker_tasks
-                WHERE status = 'completed' AND completed_date IS NOT NULL
-                GROUP BY worker_id, cloth_type
+                SELECT
+                    wt.worker_id,
+                    o.cloth_type,
+                    COUNT(wt.task_id) as total_completed,
+                    AVG(wt.completed_date - wt.assigned_date) as avg_completion_days
+                FROM worker_tasks wt
+                JOIN orders o ON wt.order_id = o.order_id
+                WHERE wt.status = 'completed' AND wt.completed_date IS NOT NULL
+                GROUP BY wt.worker_id, o.cloth_type
                 """)
             )
             performance_data = [
