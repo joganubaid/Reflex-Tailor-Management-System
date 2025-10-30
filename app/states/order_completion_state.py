@@ -101,6 +101,12 @@ class OrderCompletionState(rx.State):
                 ),
                 {"date": datetime.date.today(), "order_id": order_id},
             )
+            await session.execute(
+                text(
+                    "UPDATE payment_installments SET status = 'paid', paid_date = :date WHERE order_id = :order_id"
+                ),
+                {"date": datetime.date.today(), "order_id": order_id},
+            )
             order_info_res = await session.execute(
                 text(
                     "SELECT total_amount, discount_amount FROM orders WHERE order_id = :id"
