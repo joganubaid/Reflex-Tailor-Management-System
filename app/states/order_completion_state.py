@@ -43,16 +43,10 @@ class OrderCompletionState(rx.State):
             self.order_to_complete = cast(OrderWithCustomerName, dict(order))
             self.customer_details = cast(Customer, dict(customer)) if customer else None
             self.payment_amount = float(order["balance_payment"])
-            self.send_sms = self.customer_details.get("prefer_whatsapp", "sms") in [
-                "sms",
-                "both",
-            ]
             self.send_whatsapp = self.customer_details.get(
                 "opt_in_whatsapp", False
-            ) and self.customer_details.get("prefer_whatsapp", "sms") in [
-                "whatsapp",
-                "both",
-            ]
+            ) and self.customer_details.get("prefer_whatsapp", False)
+            self.send_sms = not self.send_whatsapp
             self.show_completion_dialog = True
             self.show_success_screen = False
             self._reset_success_info()
@@ -222,16 +216,20 @@ class OrderCompletionState(rx.State):
         )
         if payment_link:
             notification_channels.append("Payment Link")
-        if form_data.get("send_sms") == "on":
+        send_to_sms = form_data.get("send_sms") == "on"
+        send_to_whatsapp = form_data.get("send_whatsapp") == "on"
+        should_send_whatsapp = send_to_whatsapp and self.customer_details.get(
+            "opt_in_whatsapp"
+        )
+        should_send_sms = send_to_sms and (not should_send_whatsapp)
+        if should_send_sms:
             from app.utils.sms import send_status_update_notification
 
             if send_status_update_notification(
                 customer_phone, customer_name, order_id, "delivered", payment_link
             ):
                 notification_channels.append("SMS")
-        if form_data.get("send_whatsapp") == "on" and self.customer_details.get(
-            "opt_in_whatsapp"
-        ):
+        if should_send_whatsapp:
             from app.utils.whatsapp import send_whatsapp_status_update
 
             if send_whatsapp_status_update(
@@ -241,18 +239,21 @@ class OrderCompletionState(rx.State):
         from app.utils.pdf import generate_invoice_pdf
         from app.utils.email import send_email
 
-        pdf_path = generate_invoice_pdf(self.order_to_complete, self.customer_details)
-        if pdf_path and self.customer_details.get("email"):
-            email_body = f"<p>Hi {customer_name},</p>\n                         <p>Thank you for your business! Please find attached the invoice for your recent order #{order_id}.</p>\n                         <p>We appreciate your timely payment.</p>\n                         <p>Best regards,<br/>The TailorFlow Team</p>"
-            email_sent = send_email(
-                to_email=self.customer_details["email"],
-                subject=f"Invoice for Order #{order_id}",
-                body=email_body,
-                attachment_path=pdf_path,
-                attachment_filename=pdf_path.split("/")[-1],
+        if self.customer_details.get("email"):
+            pdf_path = generate_invoice_pdf(
+                self.order_to_complete, self.customer_details
             )
-            if email_sent:
-                notification_channels.append("Email Invoice")
+            if pdf_path:
+                email_body = f"<p>Hi {customer_name},</p>\n                             <p>Thank you for your business! Please find attached the invoice for your recent order #{order_id}.</p>\n                             <p>We appreciate your timely payment.</p>\n                             <p>Best regards,<br/>The TailorFlow Team</p>"
+                email_sent = send_email(
+                    to_email=self.customer_details["email"],
+                    subject=f"Invoice for Order #{order_id}",
+                    body=email_body,
+                    attachment_path=pdf_path,
+                    attachment_filename=pdf_path.split("/")[-1],
+                )
+                if email_sent:
+                    notification_channels.append("Email Invoice")
         async with self:
             self.notification_channels = notification_channels
             self.is_processing = False

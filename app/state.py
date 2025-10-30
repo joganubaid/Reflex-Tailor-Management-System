@@ -408,8 +408,11 @@ ORDER BY o.order_date DESC""")
             None,
         )
         if customer:
-            notification_preference = customer.get("prefer_whatsapp", "sms")
-            if notification_preference in ["sms", "both"]:
+            opt_in_whatsapp = customer.get("opt_in_whatsapp", False)
+            prefer_whatsapp = customer.get("prefer_whatsapp", False)
+            should_send_whatsapp = opt_in_whatsapp and prefer_whatsapp
+            should_send_sms = not should_send_whatsapp
+            if should_send_sms:
                 sms_sent = send_order_confirmation(
                     customer_phone=customer["phone_number"],
                     customer_name=customer["name"],
@@ -419,10 +422,7 @@ ORDER BY o.order_date DESC""")
                 )
                 if not sms_sent:
                     yield rx.toast.error("Failed to send order confirmation SMS.")
-            if customer.get("opt_in_whatsapp") and notification_preference in [
-                "whatsapp",
-                "both",
-            ]:
+            if should_send_whatsapp:
                 wa_sent = send_whatsapp_order_confirmation(
                     customer_phone=customer["phone_number"],
                     customer_name=customer["name"],
@@ -668,23 +668,25 @@ ORDER BY o.order_date DESC""")
             )
             customer_info = result.mappings().first()
         if customer_info:
-            notification_preference = customer_info.get("prefer_whatsapp", "sms")
+            opt_in_whatsapp = customer_info.get("opt_in_whatsapp", False)
+            prefer_whatsapp = customer_info.get("prefer_whatsapp", False)
             customer_phone = customer_info["phone_number"]
             customer_name = customer_info["name"]
-            opt_in_whatsapp = customer_info.get("opt_in_whatsapp")
+            should_send_whatsapp = opt_in_whatsapp and prefer_whatsapp
+            should_send_sms = not should_send_whatsapp
             if new_status.lower() == "ready":
-                if notification_preference in ["sms", "both"]:
+                if should_send_sms:
                     send_order_ready_notification(
                         customer_phone, customer_name, order_id
                     )
-                if opt_in_whatsapp and notification_preference in ["whatsapp", "both"]:
+                if should_send_whatsapp:
                     send_whatsapp_order_ready(customer_phone, customer_name, order_id)
             else:
-                if notification_preference in ["sms", "both"]:
+                if should_send_sms:
                     send_status_update_notification(
                         customer_phone, customer_name, order_id, new_status
                     )
-                if opt_in_whatsapp and notification_preference in ["whatsapp", "both"]:
+                if should_send_whatsapp:
                     send_whatsapp_status_update(
                         customer_phone, customer_name, order_id, new_status
                     )
