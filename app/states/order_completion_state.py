@@ -43,10 +43,16 @@ class OrderCompletionState(rx.State):
             self.order_to_complete = cast(OrderWithCustomerName, dict(order))
             self.customer_details = cast(Customer, dict(customer)) if customer else None
             self.payment_amount = float(order["balance_payment"])
-            self.send_sms = self.customer_details.get("prefer_whatsapp") != "whatsapp"
+            self.send_sms = self.customer_details.get("prefer_whatsapp", "sms") in [
+                "sms",
+                "both",
+            ]
             self.send_whatsapp = self.customer_details.get(
-                "opt_in_whatsapp"
-            ) and self.customer_details.get("prefer_whatsapp") in ["whatsapp", "both"]
+                "opt_in_whatsapp", False
+            ) and self.customer_details.get("prefer_whatsapp", "sms") in [
+                "whatsapp",
+                "both",
+            ]
             self.show_completion_dialog = True
             self.show_success_screen = False
             self._reset_success_info()
@@ -223,7 +229,9 @@ class OrderCompletionState(rx.State):
                 customer_phone, customer_name, order_id, "delivered", payment_link
             ):
                 notification_channels.append("SMS")
-        if form_data.get("send_whatsapp") == "on":
+        if form_data.get("send_whatsapp") == "on" and self.customer_details.get(
+            "opt_in_whatsapp"
+        ):
             from app.utils.whatsapp import send_whatsapp_status_update
 
             if send_whatsapp_status_update(

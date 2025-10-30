@@ -883,9 +883,9 @@ ORDER BY c.name""")
         self.phone_number = customer["phone_number"]
         self.email = customer["email"] or ""
         self.address = customer["address"] or ""
-        self.notes = customer["notes"] or ""
+        self.notes = customer.get("notes") or ""
         self.opt_in_whatsapp = customer.get("opt_in_whatsapp", False)
-        self.prefer_whatsapp = customer.get("prefer_whatsapp", "sms")
+        self.prefer_whatsapp = str(customer.get("prefer_whatsapp", "sms"))
         self.show_form = True
 
     def _reset_form_fields(self):

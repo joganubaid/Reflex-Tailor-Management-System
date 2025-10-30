@@ -70,6 +70,9 @@ def send_status_update_notification(
     payment_link: str | None = None,
 ) -> bool:
     """Sends an SMS with the new order status."""
+    logging.info(
+        f"Sending status update SMS for order #{order_id} to {customer_phone} with link: {payment_link}"
+    )
     base_message = f"Hi {customer_name}, your order #{order_id} has been {new_status}."
     if new_status.lower() == "delivered":
         if payment_link:
