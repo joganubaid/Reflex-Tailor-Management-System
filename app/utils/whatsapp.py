@@ -12,7 +12,7 @@ client = Client(ACCOUNT_SID, AUTH_TOKEN)
 
 def _send_whatsapp_message(to: str, body: str, media_url: str | None = None) -> bool:
     """Sends a WhatsApp message using Twilio."""
-    if not client:
+    if not client or not TWILIO_PHONE_NUMBER or (not ACCOUNT_SID):
         logging.error("Twilio client is not initialized. Cannot send WhatsApp message.")
         return False
     from_number = f"whatsapp:{TWILIO_PHONE_NUMBER}"
