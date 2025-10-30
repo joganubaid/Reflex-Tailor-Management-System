@@ -385,7 +385,7 @@ def order_form() -> rx.Component:
                     class_name="flex justify-end gap-4 mt-8",
                 ),
                 on_submit=OrderState.handle_order_form_submit,
-                reset_on_submit=True,
+                reset_on_submit=False,
             ),
             class_name="p-8 bg-white rounded-xl shadow-lg border border-gray-100 w-[56rem] max-w-[95vw]",
         ),
