@@ -259,4 +259,6 @@ class OrderCompletionState(rx.State):
             self.is_processing = False
             self.show_success_screen = True
             order_state = await self.get_state(OrderState)
+            payment_state = await self.get_state(PaymentState)
             yield order_state.get_orders
+            yield payment_state.get_all_installments
