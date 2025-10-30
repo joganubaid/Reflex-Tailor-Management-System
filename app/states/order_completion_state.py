@@ -218,6 +218,21 @@ class OrderCompletionState(rx.State):
                 customer_phone, customer_name, order_id, "delivered"
             ):
                 notification_channels.append("WhatsApp")
+        from app.utils.pdf import generate_invoice_pdf
+        from app.utils.email import send_email
+
+        pdf_path = generate_invoice_pdf(self.order_to_complete, self.customer_details)
+        if pdf_path and self.customer_details.get("email"):
+            email_body = f"<p>Hi {customer_name},</p>\n                         <p>Thank you for your business! Please find attached the invoice for your recent order #{order_id}.</p>\n                         <p>We appreciate your timely payment.</p>\n                         <p>Best regards,<br/>The TailorFlow Team</p>"
+            email_sent = send_email(
+                to_email=self.customer_details["email"],
+                subject=f"Invoice for Order #{order_id}",
+                body=email_body,
+                attachment_path=pdf_path,
+                attachment_filename=pdf_path.split("/")[-1],
+            )
+            if email_sent:
+                notification_channels.append("Email Invoice")
         async with self:
             self.notification_channels = notification_channels
             self.is_processing = False
