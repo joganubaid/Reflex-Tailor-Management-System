@@ -7,13 +7,7 @@ import logging
 ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID")
 AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN")
 TWILIO_PHONE_NUMBER = os.getenv("TWILIO_PHONE_NUMBER")
-if not all([ACCOUNT_SID, AUTH_TOKEN, TWILIO_PHONE_NUMBER]):
-    logging.warning(
-        "Twilio credentials are not fully configured. SMS notifications will be disabled."
-    )
-    client = None
-else:
-    client = Client(ACCOUNT_SID, AUTH_TOKEN)
+client = Client(ACCOUNT_SID, AUTH_TOKEN)
 
 
 def _send_sms(to: str, body: str) -> bool:
@@ -77,10 +71,11 @@ def send_status_update_notification(
 ) -> bool:
     """Sends an SMS with the new order status."""
     base_message = f"Hi {customer_name}, your order #{order_id} has been {new_status}."
-    if new_status == "delivered" and payment_link:
-        message = f"{base_message} You can complete your payment here: {payment_link}. Thank you for your business!"
-    elif new_status == "delivered":
-        message = f"{base_message} Thank you for your business!"
+    if new_status.lower() == "delivered":
+        if payment_link:
+            message = f"{base_message} You can complete your payment here: {payment_link}. Thank you for your business!"
+        else:
+            message = f"{base_message} Thank you for your business!"
     else:
         status_messages = {
             "cutting": f"Hi {customer_name}, your order #{order_id} has entered the cutting stage.",

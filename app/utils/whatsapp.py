@@ -7,13 +7,7 @@ import logging
 ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID")
 AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN")
 TWILIO_PHONE_NUMBER = os.getenv("TWILIO_PHONE_NUMBER")
-if not all([ACCOUNT_SID, AUTH_TOKEN, TWILIO_PHONE_NUMBER]):
-    logging.warning(
-        "Twilio credentials are not fully configured. WhatsApp notifications will be disabled."
-    )
-    client = None
-else:
-    client = Client(ACCOUNT_SID, AUTH_TOKEN)
+client = Client(ACCOUNT_SID, AUTH_TOKEN)
 
 
 def _send_whatsapp_message(to: str, body: str, media_url: str | None = None) -> bool:
