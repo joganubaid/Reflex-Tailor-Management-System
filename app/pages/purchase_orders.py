@@ -74,7 +74,7 @@ def po_card(po: rx.Var[dict]) -> rx.Component:
             rx.el.div(
                 rx.el.p("Total", class_name="text-xs text-gray-500"),
                 rx.el.p(
-                    f"⁷{po['total_amount']}", class_name="font-bold text-purple-600"
+                    f"₹{po['total_amount']}", class_name="font-bold text-purple-600"
                 ),
             ),
             class_name="grid grid-cols-2 gap-4 mt-3 pt-3 border-t",

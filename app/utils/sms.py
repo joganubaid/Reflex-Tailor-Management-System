@@ -64,7 +64,7 @@ def send_payment_reminder(
     customer_phone: str, customer_name: str, order_id: int, due_date: str, amount: float
 ) -> bool:
     """Sends a payment reminder SMS."""
-    message = f"Hi {customer_name}, a friendly reminder from TailorFlow. Your payment of ⁷{amount:.2f} for order #{order_id} is due on {due_date}. Please make the payment on time. Thank you!"
+    message = f"Hi {customer_name}, a friendly reminder from TailorFlow. Your payment of ₹{amount:.2f} for order #{order_id} is due on {due_date}. Please make the payment on time. Thank you!"
     return _send_sms(customer_phone, message)
 
 

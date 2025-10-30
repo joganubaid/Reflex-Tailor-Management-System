@@ -44,21 +44,21 @@ def billing_order_card(order: rx.Var[dict]) -> rx.Component:
             rx.el.div(
                 rx.el.p("Total", class_name="text-xs text-gray-500"),
                 rx.el.p(
-                    f"⁷{order['total_amount']}",
+                    f"₹{order['total_amount']}",
                     class_name="font-semibold text-gray-700",
                 ),
             ),
             rx.el.div(
                 rx.el.p("Advance", class_name="text-xs text-gray-500"),
                 rx.el.p(
-                    f"⁷{order['advance_payment']}",
+                    f"₹{order['advance_payment']}",
                     class_name="font-semibold text-gray-700",
                 ),
             ),
             rx.el.div(
                 rx.el.p("Balance", class_name="text-xs text-gray-500"),
                 rx.el.p(
-                    f"⁷{order['balance_payment']}", class_name="font-bold text-red-600"
+                    f"₹{order['balance_payment']}", class_name="font-bold text-red-600"
                 ),
             ),
             class_name="grid grid-cols-3 gap-4 py-3 border-t border-b",
@@ -102,11 +102,11 @@ def billing_order_row(order: rx.Var[dict]) -> rx.Component:
             class_name="px-6 py-4",
         ),
         rx.el.td(
-            f"⁷{order['total_amount'].to_string()}", class_name="px-6 py-4 font-medium"
+            f"₹{order['total_amount'].to_string()}", class_name="px-6 py-4 font-medium"
         ),
-        rx.el.td(f"⁷{order['advance_payment'].to_string()}", class_name="px-6 py-4"),
+        rx.el.td(f"₹{order['advance_payment'].to_string()}", class_name="px-6 py-4"),
         rx.el.td(
-            f"⁷{order['balance_payment'].to_string()}",
+            f"₹{order['balance_payment'].to_string()}",
             class_name=rx.cond(
                 order["balance_payment"] > 0,
                 "px-6 py-4 text-red-600 font-medium",

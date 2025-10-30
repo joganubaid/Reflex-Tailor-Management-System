@@ -77,7 +77,7 @@ def top_referrer_row(referrer: rx.Var[dict], index: rx.Var[int]) -> rx.Component
             class_name="px-4 py-3 text-center font-semibold text-purple-600",
         ),
         rx.el.td(
-            f"\u2009{referrer['total_rewards'].to_string()} pts",
+            f"{referrer['total_rewards'].to_string()} pts",
             class_name="px-4 py-3 text-center font-semibold text-green-600",
         ),
         class_name="border-b bg-white hover:bg-gray-50/50",

@@ -121,7 +121,8 @@ class PaymentState(rx.State):
     async def get_all_installments(self):
         async with rx.asession() as session:
             installments_result = await session.execute(
-                text("""SELECT pi.*, c.name as customer_name, c.phone_number as customer_phone
+                text("""SELECT pi.*, c.name as customer_name, c.phone_number as customer_phone,
+                            (SELECT MAX(pr.sent_date) FROM payment_reminders pr WHERE pr.installment_id = pi.installment_id) as last_reminder_sent
                      FROM payment_installments pi
                      JOIN orders o ON pi.order_id = o.order_id
                      JOIN customers c ON o.customer_id = c.customer_id
@@ -251,8 +252,42 @@ class PaymentState(rx.State):
         )
         async with self:
             if sms_sent:
+                async with rx.asession() as session:
+                    await session.execute(
+                        text("""INSERT INTO payment_reminders (installment_id, reminder_date, sent_date, status)
+                             VALUES (:installment_id, :reminder_date, :sent_date, 'sent')"""),
+                        {
+                            "installment_id": installment["installment_id"],
+                            "reminder_date": datetime.date.today(),
+                            "sent_date": datetime.datetime.now(),
+                        },
+                    )
+                    await session.commit()
                 yield rx.toast.success(
                     f"Payment reminder sent for order #{installment['order_id']}."
                 )
+                yield PaymentState.get_all_installments
             else:
                 yield rx.toast.error("Failed to send payment reminder SMS.")
+
+    @rx.event(background=True)
+    async def check_and_send_payment_reminders(self):
+        """Checks for overdue installments and sends reminders."""
+        async with rx.asession() as session:
+            overdue_installments_res = await session.execute(
+                text("""SELECT pi.*, c.name as customer_name, c.phone_number as customer_phone
+                       FROM payment_installments pi
+                       JOIN orders o ON pi.order_id = o.order_id
+                       JOIN customers c ON o.customer_id = c.customer_id
+                       WHERE pi.status = 'pending' AND pi.due_date <= :today
+                       AND NOT EXISTS (
+                           SELECT 1 FROM payment_reminders pr 
+                           WHERE pr.installment_id = pi.installment_id 
+                           AND pr.reminder_date = :today
+                       )"""),
+                {"today": datetime.date.today()},
+            )
+            installments_to_remind = overdue_installments_res.mappings().all()
+        for inst in installments_to_remind:
+            async with self:
+                yield PaymentState.send_reminder_sms(dict(inst))

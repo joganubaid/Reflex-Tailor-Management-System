@@ -63,12 +63,12 @@ def coupon_card(coupon: rx.Var[dict]) -> rx.Component:
             rx.cond(
                 coupon["discount_type"] == "percentage",
                 coupon["discount_value"].to_string() + "% OFF",
-                "⁷" + coupon["discount_value"].to_string() + " OFF",
+                "₹" + coupon["discount_value"].to_string() + " OFF",
             ),
             class_name="font-semibold text-gray-800",
         ),
         rx.el.p(
-            f"Min. order: ⁷{coupon['min_order_value']}",
+            f"Min. order: ₹{coupon['min_order_value']}",
             class_name="text-sm text-gray-500",
         ),
         rx.el.div(

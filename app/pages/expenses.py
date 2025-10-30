@@ -123,7 +123,7 @@ def expense_card(expense: rx.Var[dict]) -> rx.Component:
                 ),
             ),
             rx.el.p(
-                f"⁷{expense['amount']}", class_name="font-bold text-2xl text-red-600"
+                f"₹{expense['amount']}", class_name="font-bold text-2xl text-red-600"
             ),
             class_name="flex justify-between items-start",
         ),

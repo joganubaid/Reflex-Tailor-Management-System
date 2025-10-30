@@ -36,7 +36,7 @@ def installment_row(installment: rx.Var[dict]) -> rx.Component:
             class_name="px-6 py-4 text-center",
         ),
         rx.el.td(
-            f"’{installment['amount'].to_string()}",
+            f"₹{installment['amount'].to_string()}",
             class_name="px-6 py-4 font-semibold",
         ),
         rx.el.td(
@@ -47,6 +47,14 @@ def installment_row(installment: rx.Var[dict]) -> rx.Component:
             rx.cond(
                 installment["paid_date"],
                 installment["paid_date"].to_string().split("T")[0],
+                "-",
+            ),
+            class_name="px-6 py-4 text-center",
+        ),
+        rx.el.td(
+            rx.cond(
+                installment["last_reminder_sent"],
+                installment["last_reminder_sent"].to_string().split("T")[0],
                 "-",
             ),
             class_name="px-6 py-4 text-center",
@@ -154,6 +162,10 @@ def payments_page() -> rx.Component:
                                         ),
                                         rx.el.th(
                                             "Paid On",
+                                            class_name="px-6 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider",
+                                        ),
+                                        rx.el.th(
+                                            "Last Reminder",
                                             class_name="px-6 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider",
                                         ),
                                         rx.el.th(

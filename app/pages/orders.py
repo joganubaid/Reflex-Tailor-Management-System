@@ -163,12 +163,12 @@ def order_card(order: rx.Var[dict]) -> rx.Component:
         rx.el.div(
             rx.el.div(
                 rx.el.p("Total", class_name="text-xs text-gray-500"),
-                rx.el.p(f"⁷{order['total_amount']}", class_name="font-semibold"),
+                rx.el.p(f"₹{order['total_amount']}", class_name="font-semibold"),
             ),
             rx.el.div(
                 rx.el.p("Balance", class_name="text-xs text-gray-500"),
                 rx.el.p(
-                    f"⁷{order['balance_payment']}", class_name="font-bold text-red-600"
+                    f"₹{order['balance_payment']}", class_name="font-bold text-red-600"
                 ),
             ),
             class_name="grid grid-cols-2 gap-4 mt-2",

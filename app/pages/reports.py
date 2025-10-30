@@ -96,7 +96,7 @@ def reports_page() -> rx.Component:
                     metric_card(
                         "badge_alert",
                         "Total Wastage Cost",
-                        f"’{ReportState.total_wastage_cost.to_string()}",
+                        f"₹{ReportState.total_wastage_cost.to_string()}",
                         "bg-red-500",
                     ),
                     metric_card(

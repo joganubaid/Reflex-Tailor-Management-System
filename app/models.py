@@ -97,6 +97,7 @@ class PaymentInstallment(TypedDict):
     status: str
     payment_method: str | None
     notes: str | None
+    last_reminder_sent: str | None
 
 
 class Photo(TypedDict):

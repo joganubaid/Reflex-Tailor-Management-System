@@ -94,7 +94,12 @@ app.add_page(coupons_page, route="/coupons", on_load=CouponState.get_coupons)
 app.add_page(referrals_page, route="/referrals", on_load=ReferralState.get_referrals)
 app.add_page(productivity_page, route="/productivity", on_load=TaskState.get_tasks)
 app.add_page(
-    payments_page, route="/payments", on_load=PaymentState.get_all_installments
+    payments_page,
+    route="/payments",
+    on_load=[
+        PaymentState.get_all_installments,
+        PaymentState.check_and_send_payment_reminders,
+    ],
 )
 app.add_page(
     expenses_page,
