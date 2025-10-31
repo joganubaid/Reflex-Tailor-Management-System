@@ -238,16 +238,23 @@ class PaymentState(rx.State):
         self, installment: PaymentInstallment
     ) -> str | None:
         from app.utils.razorpay import create_payment_link
+        import logging
 
-        link = create_payment_link(
-            amount=float(installment["amount"]),
-            description=f"Payment for Order #{installment['order_id']}, Installment #{installment['installment_number']}",
-            customer_name=installment["customer_name"],
-            customer_contact=installment["customer_phone"],
-            customer_email=None,
-            order_id=installment["order_id"],
-        )
-        return link
+        try:
+            link = create_payment_link(
+                amount=float(installment.get("amount", 0.0)),
+                description=f"Payment for Order #{installment.get('order_id')}, Installment #{installment.get('installment_number')}",
+                customer_name=installment.get("customer_name", ""),
+                customer_contact=installment.get("customer_phone", ""),
+                customer_email=None,
+                order_id=installment.get("order_id"),
+            )
+            return link
+        except Exception as e:
+            logging.exception(
+                f"Error creating payment link for installment {installment.get('installment_id')}: {e}"
+            )
+            return None
 
     @rx.event(background=True)
     async def send_reminder_sms(self, installment: PaymentInstallment):
