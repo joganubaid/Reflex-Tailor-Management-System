@@ -179,47 +179,47 @@ def order_card(order: rx.Var[dict]) -> rx.Component:
             class_name="grid grid-cols-2 gap-4 mt-2",
         ),
         rx.el.div(
+            rx.cond(
+                order["status"] == "ready",
+                rx.el.button(
+                    rx.icon("square_check", class_name="h-5 w-5 mr-2"),
+                    "Complete Order",
+                    on_click=lambda: OrderCompletionState.start_completion(
+                        order["order_id"]
+                    ),
+                    class_name="w-full flex items-center justify-center text-base font-semibold bg-green-500 text-white px-4 py-3 rounded-lg hover:bg-green-600 mb-2",
+                ),
+                rx.fragment(),
+            ),
             rx.el.div(
                 rx.el.button(
                     "Manage",
                     rx.icon("arrow-right", class_name="h-4 w-4 ml-2"),
                     on_click=lambda: OrderManagementState.open_manage_dialog(order),
-                    class_name="flex items-center text-sm font-semibold bg-purple-100 text-purple-700 px-4 py-2 rounded-lg hover:bg-purple-200 flex-1",
+                    class_name="flex items-center text-sm font-semibold bg-purple-100 text-purple-700 px-4 py-2 rounded-lg hover:bg-purple-200 flex-1 justify-center",
                 ),
-                rx.cond(
-                    order["status"] == "ready",
+                rx.el.div(
                     rx.el.button(
-                        rx.icon("square_check", class_name="h-4 w-4 mr-1"),
-                        "Complete",
-                        on_click=lambda: OrderCompletionState.start_completion(
-                            order["order_id"]
+                        rx.icon("camera", class_name="h-4 w-4"),
+                        on_click=lambda: PhotoState.open_photo_uploader(
+                            "order_photo", order["order_id"]
                         ),
-                        class_name="flex items-center text-sm font-semibold bg-green-100 text-green-700 px-3 py-1.5 rounded-lg hover:bg-green-200",
+                        class_name="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-full",
                     ),
-                    rx.fragment(),
-                ),
-                class_name="flex items-center gap-2",
-            ),
-            rx.el.div(
-                rx.el.button(
-                    rx.icon("camera", class_name="h-4 w-4"),
-                    on_click=lambda: PhotoState.open_photo_uploader(
-                        "order_photo", order["order_id"]
+                    rx.el.button(
+                        rx.icon("copy", class_name="h-4 w-4"),
+                        on_click=lambda: OrderState.duplicate_order(order["order_id"]),
+                        class_name="p-2 text-gray-500 hover:text-green-600 hover:bg-green-50 rounded-full",
                     ),
-                    class_name="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-full",
+                    rx.el.button(
+                        rx.icon("trash-2", class_name="h-4 w-4"),
+                        class_name="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-full",
+                    ),
+                    class_name="flex items-center gap-1",
                 ),
-                rx.el.button(
-                    rx.icon("copy", class_name="h-4 w-4"),
-                    on_click=lambda: OrderState.duplicate_order(order["order_id"]),
-                    class_name="p-2 text-gray-500 hover:text-green-600 hover:bg-green-50 rounded-full",
-                ),
-                rx.el.button(
-                    rx.icon("trash-2", class_name="h-4 w-4"),
-                    class_name="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-full",
-                ),
-                class_name="flex items-center gap-1",
+                class_name="flex items-center justify-between w-full",
             ),
-            class_name="flex items-center justify-between mt-3 pt-3 border-t",
+            class_name="mt-3 pt-3 border-t w-full",
         ),
         class_name=f"bg-white p-4 rounded-xl shadow-sm border {priority_class} hover:shadow-md transition-shadow",
     )
