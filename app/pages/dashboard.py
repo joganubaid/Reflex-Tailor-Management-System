@@ -62,7 +62,7 @@ def dashboard_page() -> rx.Component:
                         DashboardState.ready_orders_count.to_string(),
                         "bg-blue-500",
                     ),
-                    class_name="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8",
+                    class_name="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6",
                 ),
                 rx.el.div(
                     rx.el.div(
@@ -127,7 +127,7 @@ def dashboard_page() -> rx.Component:
                         ),
                         class_name="p-6 bg-white rounded-xl shadow-sm",
                     ),
-                    class_name="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8",
+                    class_name="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6",
                 ),
                 rx.el.div(
                     rx.el.div(
@@ -194,9 +194,9 @@ def dashboard_page() -> rx.Component:
                         ),
                         class_name="p-6 bg-white rounded-xl shadow-sm",
                     ),
-                    class_name="grid grid-cols-1 md:grid-cols-2 gap-8",
+                    class_name="grid grid-cols-1 md:grid-cols-2 gap-6",
                 ),
-                class_name="flex-1 p-4 md:p-8 overflow-auto",
+                class_name="flex-1 p-4 md:p-6 overflow-auto",
             ),
             class_name="flex flex-col w-full",
         ),

@@ -134,8 +134,13 @@ def mobile_header() -> rx.Component:
         rx.el.button(
             rx.icon("menu", class_name="h-6 w-6"),
             on_click=MobileNavState.toggle_sidebar,
-            class_name="md:hidden p-2",
+            class_name="p-2",
         ),
-        rx.el.div(),
-        class_name="sticky top-0 z-10 flex h-16 items-center justify-between border-b bg-white px-4 md:hidden",
+        rx.el.a(
+            rx.icon("scissors", class_name="h-6 w-6 text-purple-600"),
+            rx.el.span("TailorFlow", class_name="sr-only"),
+            href="/",
+        ),
+        rx.el.div(class_name="w-8"),
+        class_name="sticky top-0 z-30 flex h-14 items-center justify-between gap-4 border-b bg-white px-4 sm:px-6 md:hidden",
     )
