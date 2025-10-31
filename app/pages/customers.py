@@ -2,6 +2,7 @@ import reflex as rx
 from app.state import CustomerState
 from app.components.sidebar import sidebar, mobile_header
 from app.components.customer_form import customer_form, delete_confirmation_dialog
+from app.components.loading import loading_spinner
 
 
 def customer_card(customer: rx.Var[dict]) -> rx.Component:
@@ -131,7 +132,9 @@ def customers_page() -> rx.Component:
                     ),
                     class_name="flex flex-col md:flex-row justify-between items-center mb-6 gap-4 md:gap-0",
                 ),
-                rx.el.div(
+                rx.cond(
+                    CustomerState.is_loading,
+                    loading_spinner("Loading customers..."),
                     rx.el.div(
                         rx.el.div(
                             rx.foreach(CustomerState.filtered_customers, customer_card),
@@ -199,8 +202,8 @@ def customers_page() -> rx.Component:
                             ),
                             None,
                         ),
+                        class_name="bg-white p-0 md:p-6 rounded-xl md:shadow-sm",
                     ),
-                    class_name="bg-white p-0 md:p-6 rounded-xl md:shadow-sm",
                 ),
                 customer_form(),
                 delete_confirmation_dialog(),
