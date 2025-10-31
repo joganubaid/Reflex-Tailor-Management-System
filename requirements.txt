@@ -76,7 +76,7 @@ python-multipart==0.0.20
 python-socketio==5.14.2
 pytz==2025.2
 qrcode==8.2
-razorpay==1.4.3
+razorpay==1.4.2
 realtime==2.22.1
 redis==6.4.0
 reflex==0.8.17
