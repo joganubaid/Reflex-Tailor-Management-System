@@ -235,7 +235,8 @@ def inventory_page() -> rx.Component:
                         class_name="hidden md:block border border-gray-200 rounded-xl",
                     ),
                     rx.cond(
-                        MaterialState.filtered_materials.length() == 0,
+                        (MaterialState.filtered_materials.length() == 0)
+                        & ~MaterialState.is_loading,
                         rx.el.div(
                             rx.icon(
                                 "package-x", class_name="h-12 w-12 text-gray-400 mb-4"

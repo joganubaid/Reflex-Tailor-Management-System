@@ -305,7 +305,8 @@ def coupons_page() -> rx.Component:
                             class_name="overflow-x-auto",
                         ),
                         rx.cond(
-                            CouponState.filtered_coupons.length() == 0,
+                            (CouponState.filtered_coupons.length() == 0)
+                            & ~CouponState.is_loading,
                             rx.el.div(
                                 rx.icon(
                                     "ticket-slash",

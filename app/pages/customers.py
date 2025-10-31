@@ -185,7 +185,8 @@ def customers_page() -> rx.Component:
                             class_name="hidden md:block rounded-lg border border-gray-200 shadow-sm",
                         ),
                         rx.cond(
-                            CustomerState.filtered_customers.length() == 0,
+                            (CustomerState.filtered_customers.length() == 0)
+                            & ~CustomerState.is_loading,
                             rx.el.div(
                                 rx.icon(
                                     "user-x", class_name="h-12 w-12 text-gray-400 mb-4"

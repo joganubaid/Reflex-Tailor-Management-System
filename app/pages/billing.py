@@ -227,7 +227,8 @@ def billing_page() -> rx.Component:
                             class_name="overflow-x-auto",
                         ),
                         rx.cond(
-                            BillingState.orders_for_billing.length() == 0,
+                            (BillingState.orders_for_billing.length() == 0)
+                            & ~BillingState.is_loading,
                             rx.el.div(
                                 rx.icon(
                                     "receipt", class_name="h-12 w-12 text-gray-400 mb-4"

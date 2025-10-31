@@ -203,7 +203,8 @@ def productivity_page() -> rx.Component:
                             class_name="overflow-x-auto",
                         ),
                         rx.cond(
-                            TaskState.filtered_tasks.length() == 0,
+                            (TaskState.filtered_tasks.length() == 0)
+                            & ~TaskState.is_loading,
                             rx.el.div(
                                 rx.icon(
                                     "clipboard-check",

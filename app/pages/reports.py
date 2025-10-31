@@ -149,7 +149,8 @@ def reports_page() -> rx.Component:
                             class_name="overflow-x-auto",
                         ),
                         rx.cond(
-                            ReportState.top_clv_customers.length() == 0,
+                            (ReportState.top_clv_customers.length() == 0)
+                            & ~ReportState.is_loading,
                             rx.el.div(
                                 rx.icon(
                                     "users", class_name="h-12 w-12 text-gray-400 mb-4"
@@ -221,7 +222,8 @@ def reports_page() -> rx.Component:
                             class_name="overflow-x-auto",
                         ),
                         rx.cond(
-                            ReportState.wastage_by_material.length() == 0,
+                            (ReportState.wastage_by_material.length() == 0)
+                            & ~ReportState.is_loading,
                             rx.el.div(
                                 rx.icon(
                                     "package", class_name="h-12 w-12 text-gray-400 mb-4"

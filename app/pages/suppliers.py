@@ -153,7 +153,8 @@ def suppliers_page() -> rx.Component:
                             class_name="overflow-x-auto",
                         ),
                         rx.cond(
-                            SupplierState.filtered_suppliers.length() == 0,
+                            (SupplierState.filtered_suppliers.length() == 0)
+                            & ~SupplierState.is_loading,
                             rx.el.div(
                                 rx.icon(
                                     "truck", class_name="h-12 w-12 text-gray-400 mb-4"

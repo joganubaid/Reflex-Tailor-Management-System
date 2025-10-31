@@ -185,7 +185,8 @@ def payments_page() -> rx.Component:
                             class_name="overflow-x-auto",
                         ),
                         rx.cond(
-                            PaymentState.filtered_installments.length() == 0,
+                            (PaymentState.filtered_installments.length() == 0)
+                            & ~PaymentState.is_loading,
                             rx.el.div(
                                 rx.icon(
                                     "indian-rupee",

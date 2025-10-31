@@ -380,7 +380,8 @@ def purchase_orders_page() -> rx.Component:
                             class_name="overflow-x-auto",
                         ),
                         rx.cond(
-                            PurchaseOrderState.purchase_orders.length() == 0,
+                            (PurchaseOrderState.purchase_orders.length() == 0)
+                            & ~PurchaseOrderState.is_loading,
                             rx.el.div(
                                 rx.icon(
                                     "file-stack",

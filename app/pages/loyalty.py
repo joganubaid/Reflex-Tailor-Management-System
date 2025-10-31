@@ -315,7 +315,8 @@ def loyalty_page() -> rx.Component:
                                 class_name="min-w-full divide-y divide-gray-200",
                             ),
                             rx.cond(
-                                LoyaltyState.filtered_transactions.length() == 0,
+                                (LoyaltyState.filtered_transactions.length() == 0)
+                                & ~LoyaltyState.is_loading,
                                 rx.el.div(
                                     rx.icon(
                                         "history",

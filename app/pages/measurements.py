@@ -434,7 +434,8 @@ def measurements_page() -> rx.Component:
                         class_name="hidden md:block overflow-x-auto border border-gray-200 rounded-xl",
                     ),
                     rx.cond(
-                        MeasurementState.filtered_measurements.length() == 0,
+                        (MeasurementState.filtered_measurements.length() == 0)
+                        & ~MeasurementState.is_loading,
                         rx.el.div(
                             rx.icon("ruler", class_name="h-12 w-12 text-gray-400 mb-4"),
                             rx.el.h3(

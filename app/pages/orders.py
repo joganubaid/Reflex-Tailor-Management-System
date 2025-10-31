@@ -333,7 +333,8 @@ def orders_page() -> rx.Component:
                         class_name="hidden md:block border border-gray-200 rounded-xl",
                     ),
                     rx.cond(
-                        OrderState.filtered_orders.length() == 0,
+                        (OrderState.filtered_orders.length() == 0)
+                        & ~OrderState.is_loading,
                         rx.el.div(
                             rx.icon(
                                 "shopping-cart",

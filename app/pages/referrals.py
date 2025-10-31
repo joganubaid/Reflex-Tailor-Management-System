@@ -312,7 +312,8 @@ def referrals_page() -> rx.Component:
                                 class_name="overflow-x-auto",
                             ),
                             rx.cond(
-                                ReferralState.filtered_referrals.length() == 0,
+                                (ReferralState.filtered_referrals.length() == 0)
+                                & ~ReferralState.is_loading,
                                 rx.el.div(
                                     rx.icon(
                                         "users",
