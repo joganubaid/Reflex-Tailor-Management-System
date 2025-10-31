@@ -335,10 +335,7 @@ ORDER BY o.order_date DESC""")
 
     @rx.event(background=True)
     async def add_order(self, form_data: dict):
-        """Adds a new order to the database and sends a confirmation SMS."""
-        from app.utils.sms import send_order_confirmation
-        from app.utils.whatsapp import send_whatsapp_order_confirmation
-
+        """Adds a new order to the database and triggers notification sending."""
         cloth_type = form_data["cloth_type"]
         quantity = int(form_data.get("quantity", 1))
         required_mats = MATERIAL_REQUIREMENTS.get(cloth_type, {})
@@ -363,11 +360,7 @@ ORDER BY o.order_date DESC""")
                     return
         customer_id = int(form_data["customer_id"])
         total_amount = float(form_data.get("total_amount", 0))
-        advance_payment = float(form_data.get("advance_payment", 0))
         delivery_date = form_data.get("delivery_date") or None
-        priority = self.order_priority
-        final_total = self.final_total_amount
-        balance = self.final_balance_payment
         async with rx.asession() as session:
             result = await session.execute(
                 text("""INSERT INTO orders (customer_id, order_date, delivery_date, status, 
@@ -385,13 +378,13 @@ ORDER BY o.order_date DESC""")
                     "cloth_type": form_data["cloth_type"],
                     "quantity": int(form_data.get("quantity", 1)),
                     "total_amount": total_amount,
-                    "advance_payment": advance_payment,
-                    "balance_payment": balance,
+                    "advance_payment": float(form_data.get("advance_payment", 0)),
+                    "balance_payment": self.final_balance_payment,
                     "special_instructions": form_data.get("special_instructions"),
-                    "priority": priority,
+                    "priority": self.order_priority,
                     "coupon_code": self.applied_coupon_code or None,
                     "discount_amount": self.coupon_discount,
-                    "points_earned": int(final_total / 100),
+                    "points_earned": int(self.final_total_amount / 100),
                 },
             )
             new_order_id = result.scalar_one()
@@ -440,41 +433,67 @@ ORDER BY o.order_date DESC""")
                     },
                 )
             await session.commit()
-        customer = next(
-            (c for c in self.available_customers if c["customer_id"] == customer_id),
-            None,
-        )
-        if customer:
-            opt_in_whatsapp = customer.get("opt_in_whatsapp", False)
-            prefer_whatsapp = customer.get("prefer_whatsapp", False)
-            should_send_whatsapp = opt_in_whatsapp and prefer_whatsapp
-            should_send_sms = not should_send_whatsapp
-            if should_send_sms:
-                sms_sent = send_order_confirmation(
-                    customer_phone=customer["phone_number"],
-                    customer_name=customer["name"],
-                    order_id=new_order_id,
-                    delivery_date=str(delivery_date) if delivery_date else "TBA",
-                    total_amount=total_amount,
-                )
-                if not sms_sent:
-                    yield rx.toast.error("Failed to send order confirmation SMS.")
-            if should_send_whatsapp:
-                wa_sent = send_whatsapp_order_confirmation(
-                    customer_phone=customer["phone_number"],
-                    customer_name=customer["name"],
-                    order_id=new_order_id,
-                    delivery_date=str(delivery_date) if delivery_date else "TBA",
-                    total_amount=total_amount,
-                )
-                if not wa_sent:
-                    yield rx.toast.error(
-                        "Failed to send order confirmation via WhatsApp."
-                    )
         async with self:
             self.show_order_form = False
-        yield rx.toast.success("Order added successfully!")
-        yield OrderState.get_orders
+            yield rx.toast.success("Order added successfully!")
+            yield OrderState.get_orders
+            yield OrderState.send_order_notifications(
+                new_order_id,
+                customer_id,
+                str(delivery_date) if delivery_date else "TBA",
+                total_amount,
+            )
+
+    @rx.event(background=True)
+    async def send_order_notifications(
+        self, order_id: int, customer_id: int, delivery_date: str, total_amount: float
+    ):
+        """Send order confirmation notifications in the background."""
+        from app.utils.sms import send_order_confirmation
+        from app.utils.whatsapp import send_whatsapp_order_confirmation
+
+        async with self:
+            customer = next(
+                (
+                    c
+                    for c in self.available_customers
+                    if c["customer_id"] == customer_id
+                ),
+                None,
+            )
+        if not customer:
+            logging.error(
+                f"Could not find customer {customer_id} to send notification for order {order_id}"
+            )
+            return
+        opt_in_whatsapp = customer.get("opt_in_whatsapp", False)
+        prefer_whatsapp = customer.get("prefer_whatsapp", False)
+        should_send_whatsapp = opt_in_whatsapp and prefer_whatsapp
+        should_send_sms = not should_send_whatsapp
+        if should_send_sms:
+            sms_sent = send_order_confirmation(
+                customer_phone=customer["phone_number"],
+                customer_name=customer["name"],
+                order_id=order_id,
+                delivery_date=delivery_date,
+                total_amount=total_amount,
+            )
+            if not sms_sent:
+                logging.error(
+                    f"Failed to send order confirmation SMS for order {order_id}."
+                )
+        if should_send_whatsapp:
+            wa_sent = send_whatsapp_order_confirmation(
+                customer_phone=customer["phone_number"],
+                customer_name=customer["name"],
+                order_id=order_id,
+                delivery_date=delivery_date,
+                total_amount=total_amount,
+            )
+            if not wa_sent:
+                logging.error(
+                    f"Failed to send order confirmation via WhatsApp for order {order_id}."
+                )
 
     @rx.event(background=True)
     async def update_order_status(self, order_id: int, new_status: str):
@@ -727,10 +746,6 @@ ORDER BY o.order_date DESC""")
                     send_whatsapp_status_update(
                         customer_phone, customer_name, order_id, new_status
                     )
-        else:
-            yield rx.toast.error(
-                f"Could not find customer details for order #{order_id} to send notification."
-            )
 
     @rx.event(background=True)
     async def duplicate_order(self, order_id: int):
