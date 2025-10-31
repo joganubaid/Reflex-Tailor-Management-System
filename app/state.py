@@ -297,24 +297,51 @@ ORDER BY o.order_date DESC""")
     def on_cloth_type_changed(self, cloth_type: str):
         self.selected_cloth_type = cloth_type
 
-    @rx.event
-    def start_editing_order(self, order: dict):
-        self.is_editing_order = True
-        self.editing_order_id = order["order_id"]
-        self.selected_customer_id = str(order["customer_id"])
-        self.selected_cloth_type = order["cloth_type"]
-        self.order_quantity = order["quantity"]
-        self.order_delivery_date = (
-            str(order["delivery_date"]).split(" ")[0] if order["delivery_date"] else ""
-        )
-        self.order_total_amount = float(order.get("total_amount", 0.0))
-        self.order_advance_payment = float(order.get("advance_payment", 0.0))
-        self.order_special_instructions = order.get("special_instructions") or ""
-        self.order_priority = order.get("priority", "standard")
-        self.applied_coupon_code = order.get("coupon_code") or ""
-        self.coupon_discount = float(order.get("discount_amount") or 0.0)
-        self.show_order_form = True
-        return OrderState.on_customer_selected(order["customer_id"])
+    @rx.event(background=True)
+    async def start_editing_order(self, order: dict):
+        async with self:
+            self.is_editing_order = True
+            self.editing_order_id = order["order_id"]
+            self.selected_customer_id = str(order["customer_id"])
+            self.selected_cloth_type = order["cloth_type"]
+            self.order_quantity = order["quantity"]
+            self.order_delivery_date = (
+                str(order["delivery_date"]).split(" ")[0]
+                if order["delivery_date"]
+                else ""
+            )
+            self.order_total_amount = float(order.get("total_amount", 0.0))
+            self.order_advance_payment = float(order.get("advance_payment", 0.0))
+            self.order_special_instructions = order.get("special_instructions") or ""
+            self.order_priority = order.get("priority", "standard")
+            self.applied_coupon_code = order.get("coupon_code") or ""
+            self.coupon_discount = float(order.get("discount_amount") or 0.0)
+        async with rx.asession() as session:
+            result = await session.execute(
+                text("""SELECT * FROM measurements 
+                       WHERE customer_id = :customer_id AND cloth_type = :cloth_type
+                       ORDER BY measurement_date DESC LIMIT 1"""),
+                {
+                    "customer_id": order["customer_id"],
+                    "cloth_type": order["cloth_type"],
+                },
+            )
+            measurements = result.mappings().first()
+        async with self:
+            if measurements:
+                self.chest = measurements.get("chest")
+                self.waist = measurements.get("waist")
+                self.hip = measurements.get("hip")
+                self.shoulder_width = measurements.get("shoulder_width")
+                self.sleeve_length = measurements.get("sleeve_length")
+                self.shirt_length = measurements.get("shirt_length")
+                self.pant_length = measurements.get("pant_length")
+                self.inseam = measurements.get("inseam")
+                self.neck = measurements.get("neck")
+            else:
+                self._reset_measurements()
+            self.show_order_form = True
+        yield OrderState.load_form_data
 
     @rx.event
     def calculate_balance(self, value: Any):
