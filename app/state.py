@@ -833,8 +833,6 @@ class CustomerState(BaseState):
             discount_amount = order_amount * (self.suggested_discount_percent / 100)
             final_amount = order_amount - discount_amount
             order_state = await self.get_state(OrderState)
-            order_state.suggested_discount = discount_amount
-            order_state.suggested_price = final_amount
             self.show_pricing_suggestion = True
         yield rx.toast.info(
             f"Pricing Suggestion: {self.suggested_discount_percent}% off ({reason})"

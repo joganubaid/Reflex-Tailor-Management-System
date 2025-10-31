@@ -221,12 +221,16 @@ class PaymentState(rx.State):
             yield rx.toast.success(f"Installment #{installment_id} marked as paid.")
             if order_details and order_details["balance_payment"] <= 0:
                 if order_details["status"] not in ["delivered", "ready", "finishing"]:
+                    from app.state import OrderState
+
                     order_state = await self.get_state(OrderState)
                     yield order_state.update_order_status(order_id, "finishing")
                     yield rx.toast.info("Order fully paid and moved to finishing.")
                 else:
                     yield rx.toast.info("Order fully paid.")
             yield PaymentState.get_all_installments
+            from app.state import OrderState
+
             order_state_for_refresh = await self.get_state(OrderState)
             yield order_state_for_refresh.get_orders
 

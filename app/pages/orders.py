@@ -123,6 +123,104 @@ def order_row(order: rx.Var[dict]) -> rx.Component:
 
 def order_card(order: rx.Var[dict]) -> rx.Component:
     priority_class = rx.match(
+        order["priority"],
+        ("urgent", f"border-l-4 {PRIORITY_COLORS['urgent']}"),
+        ("high", f"border-l-4 {PRIORITY_COLORS['high']}"),
+        PRIORITY_COLORS["standard"],
+    )
+    return rx.el.div(
+        rx.el.div(
+            rx.el.div(
+                rx.el.p(
+                    f"Order #{order['order_id']}", class_name="font-bold text-gray-800"
+                ),
+                status_badge(order["status"]),
+                class_name="flex justify-between items-center mb-1",
+            ),
+            rx.el.p(order["customer_name"], class_name="text-sm text-gray-600"),
+        ),
+        rx.el.div(
+            rx.el.div(
+                rx.el.p("Order Date", class_name="text-xs text-gray-500"),
+                rx.el.p(
+                    str(order["order_date"]).split("T")[0], class_name="font-medium"
+                ),
+            ),
+            rx.el.div(
+                rx.el.p("Delivery Date", class_name="text-xs text-gray-500"),
+                rx.el.p(
+                    rx.cond(
+                        order["delivery_date"],
+                        str(order["delivery_date"]).split("T")[0],
+                        "N/A",
+                    ),
+                    class_name="font-medium",
+                ),
+            ),
+            class_name="grid grid-cols-2 gap-4 mt-3 pt-3 border-t",
+        ),
+        rx.el.div(
+            rx.el.div(
+                rx.el.p("Total", class_name="text-xs text-gray-500"),
+                rx.el.p(f"₹{order['total_amount']}", class_name="font-semibold"),
+            ),
+            rx.el.div(
+                rx.el.p("Balance", class_name="text-xs text-gray-500"),
+                rx.el.p(
+                    f"₹{order['balance_payment']}", class_name="font-bold text-red-600"
+                ),
+            ),
+            class_name="grid grid-cols-2 gap-4 mt-2",
+        ),
+        rx.el.div(
+            rx.cond(
+                order["status"] == "ready",
+                rx.el.button(
+                    rx.icon("square_check", class_name="h-5 w-5"),
+                    "Complete",
+                    on_click=lambda: OrderCompletionState.start_completion(
+                        order["order_id"]
+                    ),
+                    class_name="flex items-center text-sm font-semibold bg-green-100 text-green-700 px-3 py-1.5 rounded-lg hover:bg-green-200 w-full justify-center",
+                ),
+                rx.fragment(),
+            ),
+            rx.el.button(
+                rx.icon("camera", class_name="h-4 w-4"),
+                on_click=lambda: PhotoState.open_photo_uploader(
+                    "order_photo", order["order_id"]
+                ),
+                class_name="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-md",
+            ),
+            rx.el.button(
+                rx.icon("file-pen-line", class_name="h-4 w-4"),
+                on_click=lambda: OrderState.start_editing_order(order),
+                class_name="p-2 text-gray-500 hover:text-purple-600 hover:bg-purple-50 rounded-md",
+            ),
+            rx.el.button(
+                rx.icon("trash-2", class_name="h-4 w-4"),
+                class_name="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-md",
+            ),
+            rx.el.button(
+                rx.icon("copy", class_name="h-4 w-4"),
+                on_click=lambda: OrderState.duplicate_order(order["order_id"]),
+                class_name="p-2 text-gray-500 hover:text-green-600 hover:bg-green-50 rounded-md",
+            ),
+            rx.el.div(
+                rx.el.button(
+                    rx.icon("qr-code", class_name="h-4 w-4"),
+                    on_click=lambda: OrderState.generate_qr_code(order["order_id"]),
+                    class_name="p-2 text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-md",
+                )
+            ),
+            class_name="flex items-center justify-end gap-1 mt-3 pt-3 border-t",
+        ),
+        class_name=f"bg-white p-4 rounded-xl shadow-sm border {priority_class} hover:shadow-md transition-shadow",
+    )
+
+
+def order_card(order: rx.Var[dict]) -> rx.Component:
+    priority_class = rx.match(
         order["priority"].to_string(),
         ("urgent", f"border-l-4 {PRIORITY_COLORS['urgent']}"),
         ("high", f"border-l-4 {PRIORITY_COLORS['high']}"),

@@ -91,7 +91,7 @@ def completion_form() -> rx.Component:
                     rx.el.input(
                         type="checkbox",
                         name="send_sms",
-                        default_checked=OrderCompletionState.send_sms,
+                        checked=OrderCompletionState.send_sms,
                         class_name="mr-2",
                     ),
                     rx.el.label("Send SMS Receipt", class_name="text-sm"),
@@ -101,7 +101,7 @@ def completion_form() -> rx.Component:
                     rx.el.input(
                         type="checkbox",
                         name="send_whatsapp",
-                        default_checked=OrderCompletionState.send_whatsapp,
+                        checked=OrderCompletionState.send_whatsapp,
                         class_name="mr-2",
                     ),
                     rx.el.label("Send WhatsApp Receipt", class_name="text-sm"),
