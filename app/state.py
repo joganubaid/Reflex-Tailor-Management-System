@@ -402,6 +402,43 @@ ORDER BY o.order_date DESC""")
                     ),
                     {"code": self.applied_coupon_code},
                 )
+            if form_data.get("chest") or form_data.get("waist"):
+                await session.execute(
+                    text("""INSERT INTO measurements (customer_id, cloth_type, chest, waist, hip, shoulder_width, sleeve_length, shirt_length, pant_length, inseam, neck, measurement_date)
+                         VALUES (:customer_id, :cloth_type, :chest, :waist, :hip, :shoulder_width, :sleeve_length, :shirt_length, :pant_length, :inseam, :neck, :measurement_date)"""),
+                    {
+                        "customer_id": customer_id,
+                        "cloth_type": form_data["cloth_type"],
+                        "chest": float(form_data.get("chest"))
+                        if form_data.get("chest")
+                        else None,
+                        "waist": float(form_data.get("waist"))
+                        if form_data.get("waist")
+                        else None,
+                        "hip": float(form_data.get("hip"))
+                        if form_data.get("hip")
+                        else None,
+                        "shoulder_width": float(form_data.get("shoulder_width"))
+                        if form_data.get("shoulder_width")
+                        else None,
+                        "sleeve_length": float(form_data.get("sleeve_length"))
+                        if form_data.get("sleeve_length")
+                        else None,
+                        "shirt_length": float(form_data.get("shirt_length"))
+                        if form_data.get("shirt_length")
+                        else None,
+                        "pant_length": float(form_data.get("pant_length"))
+                        if form_data.get("pant_length")
+                        else None,
+                        "inseam": float(form_data.get("inseam"))
+                        if form_data.get("inseam")
+                        else None,
+                        "neck": float(form_data.get("neck"))
+                        if form_data.get("neck")
+                        else None,
+                        "measurement_date": datetime.date.today(),
+                    },
+                )
             await session.commit()
         customer = next(
             (c for c in self.available_customers if c["customer_id"] == customer_id),

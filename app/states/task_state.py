@@ -60,7 +60,7 @@ class TaskState(rx.State):
             )
             await session.commit()
         async with self:
-            yield TaskState.get_tasks()
+            yield TaskState.get_tasks
             yield rx.toast.info(
                 f"Task #{task_id} status updated to {new_status.replace('_', ' ')}."
             )

@@ -78,17 +78,18 @@ class OrderCompletionState(rx.State):
         payment_method = form_data.get("payment_method", "cash")
         from app.state import OrderState
 
-        async with rx.asession() as session, session.begin():
-            await session.execute(
-                text("""INSERT INTO transactions (order_id, transaction_date, transaction_type, amount, payment_method, description)
-                     VALUES (:order_id, :date, 'order_payment', :amount, :method, 'Final balance payment')"""),
-                {
-                    "order_id": order_id,
-                    "date": datetime.date.today(),
-                    "amount": paid_amount,
-                    "method": payment_method,
-                },
-            )
+        async with rx.asession() as session:
+            async with session.begin():
+                await session.execute(
+                    text("""INSERT INTO transactions (order_id, transaction_date, transaction_type, amount, payment_method, description)
+                         VALUES (:order_id, :date, 'order_payment', :amount, :method, 'Final balance payment')"""),
+                    {
+                        "order_id": order_id,
+                        "date": datetime.date.today(),
+                        "amount": paid_amount,
+                        "method": payment_method,
+                    },
+                )
             await session.execute(
                 text(
                     "UPDATE orders SET balance_payment = balance_payment - :paid WHERE order_id = :order_id"
@@ -207,6 +208,7 @@ class OrderCompletionState(rx.State):
                 yield rx.toast.success(
                     f"Referrer {referral_info['referrer_name']} awarded {reward_points} points!"
                 )
+            await session.commit()
         customer_name = self.customer_details["name"]
         customer_phone = self.customer_details["phone_number"]
         notification_channels = []
@@ -264,10 +266,13 @@ class OrderCompletionState(rx.State):
             self.notification_channels = notification_channels
             self.is_processing = False
             self.show_success_screen = True
+            from app.state import OrderState
+            from app.states.payment_state import PaymentState
+
             order_state = await self.get_state(OrderState)
             payment_state = await self.get_state(PaymentState)
-            yield order_state.get_orders
-            yield payment_state.get_all_installments
+            yield order_state.get_orders()
+            yield payment_state.get_all_installments()
         import asyncio
 
         await asyncio.sleep(5)
