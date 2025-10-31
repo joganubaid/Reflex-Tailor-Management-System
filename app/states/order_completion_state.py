@@ -43,10 +43,11 @@ class OrderCompletionState(rx.State):
             self.order_to_complete = cast(OrderWithCustomerName, dict(order))
             self.customer_details = cast(Customer, dict(customer)) if customer else None
             self.payment_amount = float(order["balance_payment"])
-            self.send_whatsapp = self.customer_details.get(
-                "opt_in_whatsapp", False
-            ) and self.customer_details.get("prefer_whatsapp", False)
-            self.send_sms = not self.send_whatsapp
+            if self.customer_details:
+                self.send_whatsapp = self.customer_details.get(
+                    "opt_in_whatsapp", False
+                ) and self.customer_details.get("prefer_whatsapp", False)
+                self.send_sms = not self.send_whatsapp
             self.show_completion_dialog = True
             self.show_success_screen = False
             self._reset_success_info()
@@ -247,6 +248,7 @@ class OrderCompletionState(rx.State):
         from app.utils.pdf import generate_invoice_pdf
         from app.utils.email import send_email
 
+        email_sent = False
         if self.customer_details.get("email"):
             pdf_path = generate_invoice_pdf(
                 self.order_to_complete, self.customer_details
