@@ -9,8 +9,8 @@ import logging
 class OrderCompletionState(rx.State):
     show_completion_dialog: bool = False
     is_processing: bool = False
-    order_to_complete: OrderWithCustomerName | None = None
-    customer_details: Customer | None = None
+    order_to_complete: dict | None = None
+    customer_details: dict | None = None
     payment_amount: float = 0.0
     payment_method: str = "cash"
     send_sms: bool = True
@@ -32,16 +32,15 @@ class OrderCompletionState(rx.State):
             )
             order = order_res.mappings().first()
             if not order:
-                yield rx.toast.error("Order not found.")
-                return
+                return rx.toast.error("Order not found.")
             customer_res = await session.execute(
                 text("SELECT * FROM customers WHERE customer_id = :customer_id"),
                 {"customer_id": order["customer_id"]},
             )
             customer = customer_res.mappings().first()
         async with self:
-            self.order_to_complete = cast(OrderWithCustomerName, dict(order))
-            self.customer_details = cast(Customer, dict(customer)) if customer else None
+            self.order_to_complete = dict(order)
+            self.customer_details = dict(customer) if customer else None
             self.payment_amount = float(order["balance_payment"])
             if self.customer_details:
                 self.send_whatsapp = self.customer_details.get(

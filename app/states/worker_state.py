@@ -34,7 +34,7 @@ class WorkerState(rx.State):
             rows = result.mappings().all()
             async with self:
                 self.workers = [cast(Worker, dict(row)) for row in rows]
-        yield WorkerState.calculate_worker_performance
+        await self.calculate_worker_performance()
 
     @rx.event(background=True)
     async def calculate_worker_performance(self):
