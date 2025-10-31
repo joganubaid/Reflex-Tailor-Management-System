@@ -6,6 +6,8 @@ from app.components.sidebar import sidebar, mobile_header
 from app.components.order_form import order_form
 from app.components.photo_uploader import photo_upload_dialog
 from app.components.order_completion_dialog import order_completion_dialog
+from app.components.order_management_dialog import order_management_dialog
+from app.states.order_management_state import OrderManagementState
 
 STATUS_COLORS = {
     "pending": "bg-red-100 text-red-800",
@@ -181,8 +183,8 @@ def order_card(order: rx.Var[dict]) -> rx.Component:
                 rx.el.button(
                     "Manage",
                     rx.icon("arrow-right", class_name="h-4 w-4 ml-2"),
-                    on_click=OrderState.start_editing_order(order),
-                    class_name="flex items-center text-sm font-semibold bg-gray-100 text-gray-700 px-3 py-1.5 rounded-lg hover:bg-gray-200",
+                    on_click=lambda: OrderManagementState.open_manage_dialog(order),
+                    class_name="flex items-center text-sm font-semibold bg-purple-100 text-purple-700 px-4 py-2 rounded-lg hover:bg-purple-200 flex-1",
                 ),
                 rx.cond(
                     order["status"] == "ready",
@@ -354,6 +356,7 @@ def orders_page() -> rx.Component:
                 order_form(),
                 photo_upload_dialog(),
                 order_completion_dialog(),
+                order_management_dialog(),
                 class_name="flex-1 p-4 md:p-8 overflow-auto",
             ),
             class_name="flex flex-col w-full",
