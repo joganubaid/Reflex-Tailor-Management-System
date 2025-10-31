@@ -181,7 +181,7 @@ def order_card(order: rx.Var[dict]) -> rx.Component:
                 rx.el.button(
                     "Manage",
                     rx.icon("arrow-right", class_name="h-4 w-4 ml-2"),
-                    on_click=lambda: OrderState.start_editing_order(order),
+                    on_click=OrderState.start_editing_order(order),
                     class_name="flex items-center text-sm font-semibold bg-gray-100 text-gray-700 px-3 py-1.5 rounded-lg hover:bg-gray-200",
                 ),
                 rx.cond(

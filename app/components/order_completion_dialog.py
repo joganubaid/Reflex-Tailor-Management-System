@@ -193,10 +193,23 @@ def success_screen() -> rx.Component:
             class_name="space-y-3 p-6",
         ),
         rx.el.div(
+            rx.el.div(
+                rx.el.button(
+                    rx.icon("mail", class_name="h-4 w-4 mr-2"),
+                    "Email Invoice",
+                    class_name="flex-1 flex items-center justify-center py-2 px-4 rounded-lg bg-blue-100 text-blue-700 hover:bg-blue-200 font-semibold",
+                ),
+                rx.el.button(
+                    rx.icon("message-circle", class_name="h-4 w-4 mr-2"),
+                    "WhatsApp",
+                    class_name="flex-1 flex items-center justify-center py-2 px-4 rounded-lg bg-green-100 text-green-700 hover:bg-green-200 font-semibold",
+                ),
+                class_name="flex gap-2 mb-2",
+            ),
             rx.el.button(
                 "Close",
                 on_click=OrderCompletionState.close_dialog,
-                class_name="w-full py-3 bg-gray-200 rounded-lg font-semibold",
+                class_name="w-full py-3 bg-gray-200 rounded-lg font-semibold mt-2",
             ),
             class_name="p-6 border-t bg-gray-50",
         ),
