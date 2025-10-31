@@ -10,6 +10,7 @@ class MeasurementWithCustomer(Measurement):
 
 
 class MeasurementState(rx.State):
+    is_loading: bool = False
     measurements: list[MeasurementWithCustomer] = []
     available_customers: list[Customer] = []
     search_query: str = ""
@@ -33,6 +34,8 @@ class MeasurementState(rx.State):
 
     @rx.event(background=True)
     async def get_measurements(self):
+        async with self:
+            self.is_loading = True
         async with rx.asession() as session:
             measurement_result = await session.execute(
                 text("""SELECT m.*, c.name as customer_name
@@ -55,6 +58,7 @@ class MeasurementState(rx.State):
             async with self:
                 self.measurements = measurements
                 self.available_customers = customers
+                self.is_loading = False
 
     @rx.event(background=True)
     async def load_customers(self):

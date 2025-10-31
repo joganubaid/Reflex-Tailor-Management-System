@@ -18,6 +18,7 @@ class WastageData(TypedDict):
 class ReportState(rx.State):
     """State for advanced reporting and analytics."""
 
+    is_loading: bool = False
     report_start_date: str = ""
     report_end_date: str = ""
     top_clv_customers: list[dict] = []
@@ -221,9 +222,12 @@ class ReportState(rx.State):
     async def load_all_reports(self):
         """Load all report data at once."""
         async with self:
+            self.is_loading = True
             yield ReportState.get_clv_analysis
             yield ReportState.get_wastage_analysis
             yield ReportState.get_seasonal_trends
             yield ReportState.get_gst_report
             yield ReportState.analyze_seasonal_patterns()
             yield ReportState.get_bulk_purchase_recommendations()
+        async with self:
+            self.is_loading = False

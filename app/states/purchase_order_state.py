@@ -31,6 +31,7 @@ class SuggestedPO(BaseModel):
 
 
 class PurchaseOrderState(rx.State):
+    is_loading: bool = False
     purchase_orders: list[PurchaseOrder] = []
     available_suppliers: list[Supplier] = []
     available_materials: list[Material] = []
@@ -51,6 +52,8 @@ class PurchaseOrderState(rx.State):
 
     @rx.event(background=True)
     async def get_purchase_orders(self):
+        async with self:
+            self.is_loading = True
         async with rx.asession() as session:
             result = await session.execute(
                 text("""SELECT po.po_id, po.po_date, po.expected_delivery_date, po.status, po.total_amount, s.name as supplier_name 
@@ -73,6 +76,7 @@ class PurchaseOrderState(rx.State):
                 purchase_orders_data.append(PurchaseOrder(**row_dict))
             async with self:
                 self.purchase_orders = purchase_orders_data
+                self.is_loading = False
 
     @rx.event(background=True)
     async def load_po_form_data(self):

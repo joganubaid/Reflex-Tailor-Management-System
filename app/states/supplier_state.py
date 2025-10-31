@@ -6,6 +6,7 @@ import datetime
 
 
 class SupplierState(rx.State):
+    is_loading: bool = False
     suppliers: list[Supplier] = []
     search_query: str = ""
     show_form: bool = False
@@ -22,6 +23,8 @@ class SupplierState(rx.State):
 
     @rx.event(background=True)
     async def get_suppliers(self):
+        async with self:
+            self.is_loading = True
         async with rx.asession() as session:
             result = await session.execute(
                 text("""SELECT s.*, COUNT(ms.material_id) as materials_count
@@ -33,6 +36,7 @@ class SupplierState(rx.State):
             rows = result.mappings().all()
             async with self:
                 self.suppliers = [cast(Supplier, dict(row)) for row in rows]
+                self.is_loading = False
 
     @rx.var
     def filtered_suppliers(self) -> list[Supplier]:

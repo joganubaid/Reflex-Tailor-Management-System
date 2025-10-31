@@ -23,6 +23,7 @@ class AlertHistory(TypedDict):
 
 
 class AlertState(rx.State):
+    is_loading: bool = False
     alert_settings: list[AlertSetting] = []
     alert_history: list[AlertHistory] = []
     editing_setting: dict | None = None
@@ -40,6 +41,8 @@ class AlertState(rx.State):
 
     @rx.event(background=True)
     async def load_page_data(self):
+        async with self:
+            self.is_loading = True
         async with rx.asession() as session:
             settings_result = await session.execute(
                 text("SELECT * FROM alert_settings ORDER BY alert_type")
@@ -60,6 +63,7 @@ class AlertState(rx.State):
                     cast(AlertHistory, dict(row))
                     for row in history_result.mappings().all()
                 ]
+                self.is_loading = False
 
     @rx.event
     def start_editing(self, setting: dict):

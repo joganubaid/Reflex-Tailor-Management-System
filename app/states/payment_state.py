@@ -13,6 +13,7 @@ class SuggestedCreditTerms(TypedDict):
 
 
 class PaymentState(rx.State):
+    is_loading: bool = False
     installments: list[PaymentInstallment] = []
     orders_with_balance: list[OrderWithCustomerName] = []
     show_installment_form: bool = False
@@ -119,6 +120,8 @@ class PaymentState(rx.State):
 
     @rx.event(background=True)
     async def get_all_installments(self):
+        async with self:
+            self.is_loading = True
         async with rx.asession() as session:
             installments_result = await session.execute(
                 text("""SELECT pi.*, c.name as customer_name, c.phone_number as customer_phone,
@@ -142,6 +145,7 @@ class PaymentState(rx.State):
                     cast(OrderWithCustomerName, dict(row))
                     for row in orders_result.mappings().all()
                 ]
+                self.is_loading = False
 
     def _reset_form(self):
         self.is_editing = False

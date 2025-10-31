@@ -6,6 +6,7 @@ import datetime
 
 
 class WorkerState(rx.State):
+    is_loading: bool = False
     workers: list[Worker] = []
     search_query: str = ""
     show_form: bool = False
@@ -23,6 +24,8 @@ class WorkerState(rx.State):
 
     @rx.event(background=True)
     async def get_workers(self):
+        async with self:
+            self.is_loading = True
         async with rx.asession() as session:
             result = await session.execute(
                 text("""SELECT w.*, COUNT(o.order_id) AS orders_assigned
@@ -35,6 +38,8 @@ class WorkerState(rx.State):
             async with self:
                 self.workers = [cast(Worker, dict(row)) for row in rows]
         await self.calculate_worker_performance()
+        async with self:
+            self.is_loading = False
 
     @rx.event(background=True)
     async def calculate_worker_performance(self):

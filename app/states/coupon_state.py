@@ -21,6 +21,7 @@ class Coupon(TypedDict):
 
 
 class CouponState(rx.State):
+    is_loading: bool = False
     coupons: list[Coupon] = []
     search_query: str = ""
     show_form: bool = False
@@ -66,6 +67,8 @@ class CouponState(rx.State):
 
     @rx.event(background=True)
     async def get_coupons(self):
+        async with self:
+            self.is_loading = True
         async with rx.asession() as session:
             result = await session.execute(
                 text("SELECT * FROM discount_coupons ORDER BY created_date DESC")
@@ -73,6 +76,7 @@ class CouponState(rx.State):
             rows = result.mappings().all()
             async with self:
                 self.coupons = [cast(Coupon, dict(row)) for row in rows]
+                self.is_loading = False
 
     def _reset_form_fields(self):
         self.is_editing = False

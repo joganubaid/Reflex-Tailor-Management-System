@@ -8,6 +8,7 @@ import datetime
 class DashboardState(rx.State):
     """State for the dashboard page."""
 
+    is_loading: bool = False
     today_revenue: float = 0.0
     pending_orders_count: int = 0
     ready_orders_count: int = 0
@@ -19,6 +20,8 @@ class DashboardState(rx.State):
     @rx.event(background=True)
     async def get_dashboard_data(self):
         """Fetch all data needed for the dashboard."""
+        async with self:
+            self.is_loading = True
         today = datetime.date.today()
         start_of_month = today.replace(day=1)
         async with rx.asession() as session:
@@ -83,3 +86,4 @@ class DashboardState(rx.State):
                 self.monthly_sales_data = monthly_sales_data
                 self.top_customers = top_customers
                 self.recent_transactions = recent_transactions
+                self.is_loading = False

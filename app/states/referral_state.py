@@ -24,6 +24,7 @@ class TopReferrer(TypedDict):
 
 
 class ReferralState(rx.State):
+    is_loading: bool = False
     referrals: list[Referral] = []
     top_referrers: list[TopReferrer] = []
     search_query: str = ""
@@ -76,6 +77,8 @@ class ReferralState(rx.State):
 
     @rx.event(background=True)
     async def get_referrals(self):
+        async with self:
+            self.is_loading = True
         async with rx.asession() as session:
             referrals_result = await session.execute(
                 text("""SELECT cr.*, c1.name as referrer_name, c2.name as referred_name 
@@ -105,3 +108,4 @@ class ReferralState(rx.State):
                     cast(TopReferrer, dict(row))
                     for row in top_referrers_result.mappings().all()
                 ]
+                self.is_loading = False

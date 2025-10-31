@@ -21,6 +21,7 @@ class Expense(TypedDict):
 
 
 class ExpenseState(rx.State):
+    is_loading: bool = False
     expenses: list[Expense] = []
     categories: list[ExpenseCategory] = []
     search_query: str = ""
@@ -52,6 +53,8 @@ class ExpenseState(rx.State):
 
     @rx.event(background=True)
     async def get_expenses(self):
+        async with self:
+            self.is_loading = True
         async with rx.asession() as session:
             result = await session.execute(
                 text("""SELECT e.*, ec.category_name
@@ -63,6 +66,7 @@ class ExpenseState(rx.State):
                 self.expenses = [
                     cast(Expense, dict(row)) for row in result.mappings().all()
                 ]
+                self.is_loading = False
 
     @rx.event(background=True)
     async def load_form_data(self):

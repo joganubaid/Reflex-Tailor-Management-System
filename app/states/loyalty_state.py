@@ -23,6 +23,7 @@ class CustomerPoints(TypedDict):
 
 
 class LoyaltyState(rx.State):
+    is_loading: bool = False
     points_leaderboard: list[CustomerPoints] = []
     recent_transactions: list[LoyaltyTransaction] = []
     total_active_members: int = 0
@@ -58,6 +59,8 @@ class LoyaltyState(rx.State):
 
     @rx.event(background=True)
     async def get_loyalty_data(self):
+        async with self:
+            self.is_loading = True
         async with rx.asession() as session:
             leaderboard_result = await session.execute(
                 text("""SELECT customer_id, name, total_points, customer_tier
@@ -94,3 +97,4 @@ class LoyaltyState(rx.State):
                     self.total_active_members = stats["active_members"] or 0
                     self.total_points_awarded = stats["awarded"] or 0
                     self.total_points_redeemed = abs(stats["redeemed"] or 0)
+                self.is_loading = False

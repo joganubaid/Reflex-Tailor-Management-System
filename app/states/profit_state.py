@@ -5,6 +5,7 @@ import datetime
 
 
 class ProfitAnalysisState(rx.State):
+    is_loading: bool = False
     total_revenue: float = 0.0
     total_costs: float = 0.0
     net_profit: float = 0.0
@@ -16,6 +17,8 @@ class ProfitAnalysisState(rx.State):
 
     @rx.event(background=True)
     async def get_profit_analysis_data(self):
+        async with self:
+            self.is_loading = True
         async with rx.asession() as session:
             metrics_result = await session.execute(
                 text("""SELECT 
@@ -87,3 +90,4 @@ class ProfitAnalysisState(rx.State):
                 self.profit_by_cloth_type = profit_by_cloth_type
                 self.top_profitable_customers = top_profitable_customers
                 self.profit_by_worker = profit_by_worker
+                self.is_loading = False

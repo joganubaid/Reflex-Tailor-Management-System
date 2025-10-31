@@ -29,6 +29,7 @@ class BaseState(rx.State):
 
 
 class OrderState(BaseState):
+    is_loading: bool = False
     orders: list[OrderWithCustomerName] = []
     search_query: str = ""
     priority_filter: str = "all"
@@ -153,6 +154,8 @@ class OrderState(BaseState):
 
     @rx.event(background=True)
     async def get_orders(self):
+        async with self:
+            self.is_loading = True
         async with rx.asession() as session:
             result = await session.execute(
                 text("""SELECT o.*, c.name as customer_name 
@@ -162,6 +165,7 @@ ORDER BY o.order_date DESC""")
             rows = result.mappings().all()
             async with self:
                 self.orders = [cast(OrderWithCustomerName, dict(row)) for row in rows]
+                self.is_loading = False
 
     @rx.event
     def toggle_order_form(self):
@@ -811,6 +815,7 @@ ORDER BY o.order_date DESC""")
 
 
 class CustomerState(BaseState):
+    is_loading: bool = False
     customers: list[Customer] = []
     search_query: str = ""
     show_form: bool = False
@@ -867,6 +872,8 @@ class CustomerState(BaseState):
 
     @rx.event(background=True)
     async def get_customers(self):
+        async with self:
+            self.is_loading = True
         async with rx.asession() as session:
             result = await session.execute(
                 text("""SELECT c.*, COUNT(o.order_id) AS total_orders
@@ -878,6 +885,7 @@ ORDER BY c.name""")
             rows = result.mappings().all()
             async with self:
                 self.customers = [cast(Customer, dict(row)) for row in rows]
+                self.is_loading = False
 
     @rx.var
     def filtered_customers(self) -> list[Customer]:
@@ -1018,6 +1026,7 @@ ORDER BY c.name""")
 
 
 class BillingState(BaseState):
+    is_loading: bool = False
     orders_for_billing: list[OrderWithCustomerName] = []
     transactions: list[Transaction] = []
     invoices: list[Invoice] = []
@@ -1031,6 +1040,8 @@ class BillingState(BaseState):
 
     @rx.event(background=True)
     async def get_orders_for_billing(self):
+        async with self:
+            self.is_loading = True
         async with rx.asession() as session:
             result = await session.execute(
                 text("""SELECT o.*, c.name as customer_name 
@@ -1042,9 +1053,11 @@ ORDER BY o.order_date DESC""")
                 self.orders_for_billing = [
                     cast(OrderWithCustomerName, dict(row)) for row in rows
                 ]
+                self.is_loading = False
 
 
 class MaterialState(BaseState):
+    is_loading: bool = False
     materials: list[Material] = []
     search_query: str = ""
     stock_filter: str = "all"
@@ -1066,6 +1079,8 @@ class MaterialState(BaseState):
 
     @rx.event(background=True)
     async def get_materials(self):
+        async with self:
+            self.is_loading = True
         async with rx.asession() as session:
             result = await session.execute(
                 text("SELECT * FROM materials ORDER BY material_name")
@@ -1086,6 +1101,7 @@ class MaterialState(BaseState):
                 materials.append(cast(Material, material_dict))
             async with self:
                 self.materials = materials
+                self.is_loading = False
 
     @rx.var
     def filtered_materials(self) -> list[Material]:

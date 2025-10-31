@@ -6,11 +6,14 @@ import datetime
 
 
 class TaskState(rx.State):
+    is_loading: bool = False
     tasks: list[WorkerTaskWithDetails] = []
     search_query: str = ""
 
     @rx.event(background=True)
     async def get_tasks(self):
+        async with self:
+            self.is_loading = True
         async with rx.asession() as session:
             result = await session.execute(
                 text("""SELECT 
@@ -30,6 +33,7 @@ class TaskState(rx.State):
             ]
             async with self:
                 self.tasks = tasks
+                self.is_loading = False
 
     @rx.var
     def filtered_tasks(self) -> list[WorkerTaskWithDetails]:
