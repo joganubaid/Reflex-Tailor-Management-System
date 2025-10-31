@@ -56,6 +56,7 @@ app = rx.App(
             href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700&display=swap",
             rel="stylesheet",
         ),
+        rx.el.link(rel="manifest", href="/manifest.json"),
     ],
 )
 app.add_page(index, route="/", on_load=DashboardState.get_dashboard_data)
