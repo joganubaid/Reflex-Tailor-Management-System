@@ -1,0 +1,59 @@
+services:
+  # Web Service Only - Using Your Neon Database
+  - type: web
+    name: tailorflow-web
+    env: python
+    region: oregon
+    plan: free
+    branch: main
+    
+    # Build command
+    buildCommand: pip install -r requirements.txt && reflex init && reflex db migrate
+    
+    # Start command
+    startCommand: reflex run --env prod --backend-port $PORT
+    
+    # Health check
+    healthCheckPath: /
+    
+    # Environment variables (you'll add values in Render dashboard)
+    envVars:
+      # Neon Database (already set up)
+      - key: REFLEX_DB_URL
+        sync: false
+      
+      - key: REFLEX_ASYNC_DB_URL
+        sync: false
+      
+      # Supabase Storage (already set up)
+      - key: SUPABASE_URL
+        sync: false
+      
+      - key: SUPABASE_KEY
+        sync: false
+      
+      # Twilio (already have)
+      - key: TWILIO_ACCOUNT_SID
+        sync: false
+      
+      - key: TWILIO_AUTH_TOKEN
+        sync: false
+      
+      - key: TWILIO_PHONE_NUMBER
+        sync: false
+      
+      # Optional
+      - key: RAZORPAY_KEY_ID
+        sync: false
+      
+      - key: RAZORPAY_KEY_SECRET
+        sync: false
+      
+      - key: SMTP_HOST
+        sync: false
+      
+      - key: SMTP_USERNAME
+        sync: false
+      
+      - key: SMTP_PASSWORD
+        sync: false
