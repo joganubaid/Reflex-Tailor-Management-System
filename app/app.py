@@ -101,11 +101,7 @@ app = rx.App(
 app.add_page(index, route="/", on_load=DashboardState.get_dashboard_data)
 app.add_page(dashboard, route="/dashboard")
 app.add_page(customers_page, route="/customers", on_load=CustomerState.get_customers)
-app.add_page(
-    orders_page,
-    route="/orders",
-    on_load=[OrderState.get_orders, OrderState.load_form_data],
-)
+app.add_page(orders_page, route="/orders", on_load=OrderState.get_orders)
 app.add_page(inventory_page, route="/inventory", on_load=MaterialState.get_materials)
 app.add_page(
     billing_page, route="/billing", on_load=BillingState.get_orders_for_billing
