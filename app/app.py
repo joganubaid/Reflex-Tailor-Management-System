@@ -10,6 +10,8 @@ from app.states.report_state import ReportState
 from app.pages.measurements import measurements_page
 from app.pages.payments import payments_page
 from app.pages.profit_analysis import profit_analysis_page
+from app.pages.install_instructions import install_instructions_page
+from app.pages.offline import offline_page
 from app.state import CustomerState, OrderState, MaterialState, BillingState
 from app.states.dashboard_state import DashboardState
 from app.states.worker_state import WorkerState
@@ -36,15 +38,43 @@ from app.pages.productivity import productivity_page
 from app.pages.expenses import expenses_page
 from app.pages.alerts import alerts_page
 from app.components.sidebar import sidebar
+from app.components.pwa_install_banner import pwa_install_banner
 
 
 def index() -> rx.Component:
-    return dashboard_page()
+    return rx.el.div(
+        pwa_install_banner(),
+        dashboard_page(),
+        rx.el.script("""
+            // Register service worker for PWA functionality
+            if ('serviceWorker' in navigator) {
+                window.addEventListener('load', function() {
+                    navigator.serviceWorker.register('/service-worker.js')
+                        .then(function(registration) {
+                            console.log('ServiceWorker registration successful');
+                        })
+                        .catch(function(err) {
+                            console.log('ServiceWorker registration failed: ', err);
+                        });
+                });
+            }
+            """),
+    )
 
 
 @rx.page(route="/dashboard", on_load=DashboardState.get_dashboard_data)
 def dashboard() -> rx.Component:
     return dashboard_page()
+
+
+@rx.page(route="/install-instructions")
+def install_instructions() -> rx.Component:
+    return install_instructions_page()
+
+
+@rx.page(route="/offline")
+def offline() -> rx.Component:
+    return offline_page()
 
 
 app = rx.App(
@@ -57,6 +87,15 @@ app = rx.App(
             rel="stylesheet",
         ),
         rx.el.link(rel="manifest", href="/manifest.json"),
+        rx.el.meta(name="theme-color", content="#9333ea"),
+        rx.el.meta(name="apple-mobile-web-app-capable", content="yes"),
+        rx.el.meta(name="apple-mobile-web-app-status-bar-style", content="default"),
+        rx.el.meta(name="apple-mobile-web-app-title", content="TailorFlow"),
+        rx.el.link(rel="apple-touch-icon", href="/apple-touch-icon.png"),
+        rx.el.meta(
+            name="viewport",
+            content="width=device-width, initial-scale=1, viewport-fit=cover",
+        ),
     ],
 )
 app.add_page(index, route="/", on_load=DashboardState.get_dashboard_data)
@@ -95,16 +134,7 @@ app.add_page(coupons_page, route="/coupons", on_load=CouponState.get_coupons)
 app.add_page(referrals_page, route="/referrals", on_load=ReferralState.get_referrals)
 app.add_page(productivity_page, route="/productivity", on_load=TaskState.get_tasks)
 app.add_page(
-    payments_page,
-    route="/payments",
-    on_load=[
-        PaymentState.get_all_installments,
-        PaymentState.check_and_send_payment_reminders,
-    ],
-)
-app.add_page(
-    expenses_page,
-    route="/expenses",
-    on_load=[ExpenseState.get_expenses, ExpenseState.load_form_data],
+    payments_page, route="/payments", on_load=PaymentState.get_all_installments
 )
 app.add_page(alerts_page, route="/alerts", on_load=AlertState.load_page_data)
+app.add_page(expenses_page, route="/expenses", on_load=ExpenseState.get_expenses)
