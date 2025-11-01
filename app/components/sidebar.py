@@ -17,15 +17,23 @@ def nav_item(text: str, href: str, icon: str, is_active: bool) -> rx.Component:
     )
 
 
+NAV_ITEMS = [
+    {"text": "Dashboard", "href": "/dashboard", "icon": "layout-dashboard"},
+    {"text": "Customers", "href": "/customers", "icon": "users"},
+    {"text": "Orders", "href": "/orders", "icon": "shopping-cart"},
+    {"text": "Measurements", "href": "/measurements", "icon": "ruler"},
+    {"text": "Payments", "href": "/payments", "icon": "banknote"},
+    {"text": "Expenses", "href": "/expenses", "icon": "credit-card"},
+    {"text": "Purchase Orders", "href": "/purchase-orders", "icon": "truck"},
+    {"text": "Loyalty", "href": "/loyalty", "icon": "gem"},
+    {"text": "Referrals", "href": "/referrals", "icon": "gift"},
+    {"text": "Profit Analysis", "href": "/profit-analysis", "icon": "line-chart"},
+    {"text": "Reports", "href": "/reports", "icon": "file-text"},
+    {"text": "Alerts", "href": "/alerts", "icon": "bell-ring"},
+]
+
+
 def mobile_sidebar() -> rx.Component:
-    nav_items = [
-        {"text": "Dashboard", "href": "/dashboard", "icon": "layout-dashboard"},
-        {"text": "Customers", "href": "/customers", "icon": "users"},
-        {"text": "Orders", "href": "/orders", "icon": "shopping-cart"},
-        {"text": "Measurements", "href": "/measurements", "icon": "ruler"},
-        {"text": "Expenses", "href": "/expenses", "icon": "credit-card"},
-        {"text": "Alerts", "href": "/alerts", "icon": "bell-ring"},
-    ]
     current_path = rx.State.router.page.path
     return rx.el.div(
         rx.el.div(
@@ -45,7 +53,7 @@ def mobile_sidebar() -> rx.Component:
         ),
         rx.el.nav(
             rx.foreach(
-                nav_items,
+                NAV_ITEMS,
                 lambda item: nav_item(
                     item["text"],
                     item["href"],
@@ -61,14 +69,6 @@ def mobile_sidebar() -> rx.Component:
 
 
 def desktop_sidebar() -> rx.Component:
-    nav_items = [
-        {"text": "Dashboard", "href": "/dashboard", "icon": "layout-dashboard"},
-        {"text": "Customers", "href": "/customers", "icon": "users"},
-        {"text": "Orders", "href": "/orders", "icon": "shopping-cart"},
-        {"text": "Measurements", "href": "/measurements", "icon": "ruler"},
-        {"text": "Expenses", "href": "/expenses", "icon": "credit-card"},
-        {"text": "Alerts", "href": "/alerts", "icon": "bell-ring"},
-    ]
     current_path = rx.State.router.page.path
     return rx.el.aside(
         rx.el.div(
@@ -84,7 +84,7 @@ def desktop_sidebar() -> rx.Component:
         ),
         rx.el.nav(
             rx.foreach(
-                nav_items,
+                NAV_ITEMS,
                 lambda item: nav_item(
                     item["text"],
                     item["href"],

@@ -549,7 +549,7 @@ ORDER BY o.order_date DESC""")
         )
 
         if new_status == "cutting":
-            async with rx.asession() as session:
+            async with rx.asession() as session, session.begin():
                 order_res = await session.execute(
                     text(
                         "SELECT cloth_type, quantity, assigned_worker FROM orders WHERE order_id = :order_id"
@@ -636,7 +636,6 @@ ORDER BY o.order_date DESC""")
                         "id": order_id,
                     },
                 )
-                await session.commit()
                 yield rx.toast.success("Materials deducted and costs updated.")
         async with rx.asession() as session, session.begin():
             await session.execute(

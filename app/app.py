@@ -5,13 +5,26 @@ from app.pages.dashboard import dashboard_page
 from app.pages.measurements import measurements_page
 from app.pages.install_instructions import install_instructions_page
 from app.pages.offline import offline_page
-from app.state import CustomerState, OrderState, MaterialState
+from app.state import CustomerState, OrderState
 from app.states.dashboard_state import DashboardState
 from app.states.measurement_state import MeasurementState
 from app.states.expense_state import ExpenseState
 from app.states.alert_state import AlertState
+from app.states.payment_state import PaymentState
+from app.states.loyalty_state import LoyaltyState
+from app.states.referral_state import ReferralState
+from app.states.profit_state import ProfitAnalysisState
+from app.states.purchase_order_state import PurchaseOrderState
+from app.states.report_state import ReportState
 from app.pages.expenses import expenses_page
 from app.pages.alerts import alerts_page
+from app.pages.payments import payments_page
+from app.pages.loyalty import loyalty_page
+from app.pages.referrals import referrals_page
+from app.pages.profit_analysis import profit_analysis_page
+from app.pages.purchase_orders import purchase_orders_page
+from app.pages.reports import reports_page
+from app.states.payment_state import payment_success, payment_failure
 from app.components.pwa_install_banner import pwa_install_banner
 
 
@@ -81,3 +94,24 @@ app.add_page(
 )
 app.add_page(alerts_page, route="/alerts", on_load=AlertState.load_page_data)
 app.add_page(expenses_page, route="/expenses", on_load=ExpenseState.get_expenses)
+app.add_page(
+    payments_page, route="/payments", on_load=PaymentState.get_all_installments
+)
+app.add_page(loyalty_page, route="/loyalty", on_load=LoyaltyState.get_loyalty_data)
+app.add_page(referrals_page, route="/referrals", on_load=ReferralState.get_referrals)
+app.add_page(
+    profit_analysis_page,
+    route="/profit-analysis",
+    on_load=ProfitAnalysisState.get_profit_analysis_data,
+)
+app.add_page(
+    purchase_orders_page,
+    route="/purchase-orders",
+    on_load=[
+        PurchaseOrderState.get_purchase_orders,
+        PurchaseOrderState.check_low_stock_materials,
+    ],
+)
+app.add_page(reports_page, route="/reports", on_load=ReportState.load_all_reports)
+app.add_page(payment_success)
+app.add_page(payment_failure)
