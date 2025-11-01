@@ -24,6 +24,51 @@ def payment_status_badge(status: rx.Var[str]) -> rx.Component:
     )
 
 
+def installment_card(installment: rx.Var[dict]) -> rx.Component:
+    return rx.el.div(
+        rx.el.div(
+            rx.el.p(
+                f"Order #{installment['order_id']} - {installment['customer_name']}",
+                class_name="font-bold text-gray-800 truncate",
+            ),
+            payment_status_badge(installment["status"]),
+            class_name="flex justify-between items-start mb-2",
+        ),
+        rx.el.div(
+            rx.el.div(
+                rx.el.p("Amount Due", class_name="text-xs text-gray-500"),
+                rx.el.p(
+                    f"₹{installment['amount'].to_string()}",
+                    class_name="font-bold text-lg text-purple-600",
+                ),
+            ),
+            rx.el.div(
+                rx.el.p("Due Date", class_name="text-xs text-gray-500"),
+                rx.el.p(
+                    installment["due_date"].to_string().split("T")[0],
+                    class_name="font-semibold",
+                ),
+                class_name="text-right",
+            ),
+            class_name="flex justify-between items-end",
+        ),
+        rx.el.div(
+            rx.cond(
+                installment["status"] != "paid",
+                rx.el.button(
+                    rx.icon("send", class_name="h-4 w-4 mr-2"),
+                    "Send Reminder",
+                    on_click=lambda: PaymentState.send_reminder_sms(installment),
+                    class_name="flex-1 flex items-center justify-center py-2.5 px-4 rounded-lg bg-blue-100 text-blue-700 hover:bg-blue-200 font-semibold text-sm",
+                ),
+                rx.fragment(),
+            ),
+            class_name="mt-4 pt-3 border-t",
+        ),
+        class_name="bg-white p-4 rounded-xl shadow-sm border border-gray-100",
+    )
+
+
 def installment_row(installment: rx.Var[dict]) -> rx.Component:
     return rx.el.tr(
         rx.el.td(
@@ -64,18 +109,6 @@ def installment_row(installment: rx.Var[dict]) -> rx.Component:
                 rx.cond(
                     installment["status"] != "paid",
                     rx.el.button(
-                        rx.icon("check_check", class_name="h-4 w-4 mr-1"),
-                        "Mark Paid",
-                        on_click=lambda: PaymentState.mark_as_paid(
-                            installment["installment_id"]
-                        ),
-                        class_name="flex items-center px-3 py-1.5 text-xs font-medium text-green-600 border border-green-200 rounded-md hover:bg-green-50",
-                    ),
-                    rx.el.span("", class_name="w-24"),
-                ),
-                rx.cond(
-                    installment["status"] != "paid",
-                    rx.el.button(
                         rx.icon("send", class_name="h-4 w-4 mr-1"),
                         "Reminder",
                         on_click=lambda: PaymentState.send_reminder_sms(installment),
@@ -83,7 +116,7 @@ def installment_row(installment: rx.Var[dict]) -> rx.Component:
                     ),
                     rx.fragment(),
                 ),
-                class_name="flex items-center gap-2",
+                class_name="flex items-center justify-center gap-2",
             ),
             class_name="px-6 py-4",
         ),
@@ -131,6 +164,12 @@ def payments_page() -> rx.Component:
                     class_name="flex flex-col md:flex-row justify-between items-center mb-6 gap-4",
                 ),
                 rx.el.div(
+                    rx.el.div(
+                        rx.foreach(
+                            PaymentState.filtered_installments, installment_card
+                        ),
+                        class_name="grid grid-cols-1 sm:grid-cols-2 gap-4 md:hidden",
+                    ),
                     rx.el.div(
                         rx.el.div(
                             rx.el.table(
@@ -204,9 +243,9 @@ def payments_page() -> rx.Component:
                             ),
                             None,
                         ),
-                        class_name="overflow-hidden border border-gray-200 rounded-xl",
+                        class_name="hidden md:block overflow-hidden border border-gray-200 rounded-xl",
                     ),
-                    class_name="bg-white p-2 md:p-6 rounded-xl shadow-sm",
+                    class_name="bg-white md:bg-transparent p-0 md:p-6 rounded-xl md:shadow-none",
                 ),
                 payment_installment_form(),
                 class_name="flex-1 p-4 md:p-8 overflow-auto",

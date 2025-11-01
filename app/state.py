@@ -392,7 +392,8 @@ ORDER BY o.order_date DESC""")
         customer_id = int(form_data["customer_id"])
         total_amount = float(form_data.get("total_amount", 0))
         delivery_date = form_data.get("delivery_date") or None
-        async with rx.asession() as session:
+        balance_payment = self.final_balance_payment
+        async with rx.asession() as session, session.begin():
             result = await session.execute(
                 text("""INSERT INTO orders (customer_id, order_date, delivery_date, status, 
             cloth_type, quantity, total_amount, advance_payment, balance_payment, 
@@ -410,7 +411,7 @@ ORDER BY o.order_date DESC""")
                     "quantity": int(form_data.get("quantity", 1)),
                     "total_amount": total_amount,
                     "advance_payment": float(form_data.get("advance_payment", 0)),
-                    "balance_payment": self.final_balance_payment,
+                    "balance_payment": balance_payment,
                     "special_instructions": form_data.get("special_instructions"),
                     "priority": self.order_priority,
                     "coupon_code": self.applied_coupon_code or None,
@@ -419,6 +420,17 @@ ORDER BY o.order_date DESC""")
                 },
             )
             new_order_id = result.scalar_one()
+            if balance_payment > 0:
+                await session.execute(
+                    text("""INSERT INTO payment_installments (order_id, installment_number, amount, due_date, status)
+                         VALUES (:order_id, 1, :amount, :due_date, 'pending')"""),
+                    {
+                        "order_id": new_order_id,
+                        "amount": balance_payment,
+                        "due_date": delivery_date
+                        or datetime.date.today() + datetime.timedelta(days=15),
+                    },
+                )
             if self.applied_coupon_code:
                 await session.execute(
                     text(
@@ -463,7 +475,6 @@ ORDER BY o.order_date DESC""")
                         "measurement_date": datetime.date.today(),
                     },
                 )
-            await session.commit()
         async with self:
             self.show_order_form = False
             yield rx.toast.success("Order added successfully!")

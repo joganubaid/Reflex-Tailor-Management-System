@@ -191,16 +191,20 @@ class PaymentState(rx.State):
         yield rx.toast.success("Installment added successfully!")
 
     @rx.event(background=True)
-    async def mark_as_paid(self, installment_id: int):
+    async def mark_as_paid(self, installment_id: int, payment_method: str = "cash"):
         from app.state import OrderState
 
         async with rx.asession() as session, session.begin():
             result = await session.execute(
                 text("""UPDATE payment_installments 
-                     SET status = 'paid', paid_date = :paid_date, payment_method = 'cash'
+                     SET status = 'paid', paid_date = :paid_date, payment_method = :payment_method
                      WHERE installment_id = :installment_id
                      RETURNING order_id, amount"""),
-                {"installment_id": installment_id, "paid_date": datetime.date.today()},
+                {
+                    "installment_id": installment_id,
+                    "paid_date": datetime.date.today(),
+                    "payment_method": payment_method,
+                },
             )
             res = result.mappings().first()
             if not res:
