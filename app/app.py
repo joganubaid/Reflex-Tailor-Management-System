@@ -13,12 +13,10 @@ from app.states.alert_state import AlertState
 from app.pages.expenses import expenses_page
 from app.pages.alerts import alerts_page
 from app.components.pwa_install_banner import pwa_install_banner
-from app.states.worker_state import WorkerState
 from app.states.coupon_state import CouponState
 from app.states.payment_state import PaymentState
 from app.states.supplier_state import SupplierState
 from app.state import MaterialState
-from app.pages.workers import workers_page
 from app.pages.coupons import coupons_page
 from app.pages.inventory import inventory_page
 from app.pages.payments import payments_page
@@ -91,7 +89,6 @@ app.add_page(
 )
 app.add_page(alerts_page, route="/alerts", on_load=AlertState.load_page_data)
 app.add_page(expenses_page, route="/expenses", on_load=ExpenseState.get_expenses)
-app.add_page(workers_page, route="/workers", on_load=WorkerState.get_workers)
 app.add_page(coupons_page, route="/coupons", on_load=CouponState.get_coupons)
 app.add_page(inventory_page, route="/inventory", on_load=MaterialState.get_materials)
 app.add_page(
