@@ -24,8 +24,6 @@ def mobile_sidebar() -> rx.Component:
         {"text": "Orders", "href": "/orders", "icon": "shopping-cart"},
         {"text": "Measurements", "href": "/measurements", "icon": "ruler"},
         {"text": "Inventory", "href": "/inventory", "icon": "package"},
-        {"text": "Billing", "href": "/billing", "icon": "file-text"},
-        {"text": "Payments", "href": "/payments", "icon": "indian-rupee"},
         {"text": "Profit Analysis", "href": "/profit-analysis", "icon": "line-chart"},
         {"text": "Reports", "href": "/reports", "icon": "bar-chart-2"},
         {"text": "Workers", "href": "/workers", "icon": "contact"},
@@ -37,6 +35,7 @@ def mobile_sidebar() -> rx.Component:
         {"text": "Productivity", "href": "/productivity", "icon": "clipboard-check"},
         {"text": "Expenses", "href": "/expenses", "icon": "credit-card"},
         {"text": "Alerts", "href": "/alerts", "icon": "bell-ring"},
+        {"text": "Payments", "href": "/payments", "icon": "dollar-sign"},
     ]
     current_path = rx.State.router.page.path
     return rx.el.div(
@@ -79,8 +78,6 @@ def desktop_sidebar() -> rx.Component:
         {"text": "Orders", "href": "/orders", "icon": "shopping-cart"},
         {"text": "Measurements", "href": "/measurements", "icon": "ruler"},
         {"text": "Inventory", "href": "/inventory", "icon": "package"},
-        {"text": "Billing", "href": "/billing", "icon": "file-text"},
-        {"text": "Payments", "href": "/payments", "icon": "indian-rupee"},
         {"text": "Profit Analysis", "href": "/profit-analysis", "icon": "line-chart"},
         {"text": "Reports", "href": "/reports", "icon": "bar-chart-2"},
         {"text": "Workers", "href": "/workers", "icon": "contact"},
@@ -92,6 +89,7 @@ def desktop_sidebar() -> rx.Component:
         {"text": "Productivity", "href": "/productivity", "icon": "clipboard-check"},
         {"text": "Expenses", "href": "/expenses", "icon": "credit-card"},
         {"text": "Alerts", "href": "/alerts", "icon": "bell-ring"},
+        {"text": "Payments", "href": "/payments", "icon": "dollar-sign"},
     ]
     current_path = rx.State.router.page.path
     return rx.el.aside(

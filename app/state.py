@@ -1036,37 +1036,6 @@ ORDER BY c.name""")
         return
 
 
-class BillingState(BaseState):
-    is_loading: bool = False
-    orders_for_billing: list[OrderWithCustomerName] = []
-    transactions: list[Transaction] = []
-    invoices: list[Invoice] = []
-    show_invoice_form: bool = False
-    show_payment_form: bool = False
-    selected_order_for_invoice: OrderWithCustomerName | None = None
-    total_revenue: float = 0.0
-    today_collection: float = 0.0
-    pending_payments: float = 0.0
-    month_revenue: float = 0.0
-
-    @rx.event(background=True)
-    async def get_orders_for_billing(self):
-        async with self:
-            self.is_loading = True
-        async with rx.asession() as session:
-            result = await session.execute(
-                text("""SELECT o.*, c.name as customer_name 
-FROM orders o JOIN customers c ON o.customer_id = c.customer_id 
-ORDER BY o.order_date DESC""")
-            )
-            rows = result.mappings().all()
-            async with self:
-                self.orders_for_billing = [
-                    cast(OrderWithCustomerName, dict(row)) for row in rows
-                ]
-                self.is_loading = False
-
-
 class MaterialState(BaseState):
     is_loading: bool = False
     materials: list[Material] = []
