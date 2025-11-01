@@ -23,12 +23,7 @@ def mobile_sidebar() -> rx.Component:
         {"text": "Customers", "href": "/customers", "icon": "users"},
         {"text": "Orders", "href": "/orders", "icon": "shopping-cart"},
         {"text": "Measurements", "href": "/measurements", "icon": "ruler"},
-        {"text": "Inventory", "href": "/inventory", "icon": "boxes"},
-        {"text": "Workers", "href": "/workers", "icon": "users-2"},
-        {"text": "Suppliers", "href": "/suppliers", "icon": "truck"},
-        {"text": "Payments", "href": "/payments", "icon": "indian-rupee"},
         {"text": "Expenses", "href": "/expenses", "icon": "credit-card"},
-        {"text": "Coupons", "href": "/coupons", "icon": "percent"},
         {"text": "Alerts", "href": "/alerts", "icon": "bell-ring"},
     ]
     current_path = rx.State.router.page.path
@@ -71,12 +66,7 @@ def desktop_sidebar() -> rx.Component:
         {"text": "Customers", "href": "/customers", "icon": "users"},
         {"text": "Orders", "href": "/orders", "icon": "shopping-cart"},
         {"text": "Measurements", "href": "/measurements", "icon": "ruler"},
-        {"text": "Inventory", "href": "/inventory", "icon": "boxes"},
-        {"text": "Workers", "href": "/workers", "icon": "users-2"},
-        {"text": "Suppliers", "href": "/suppliers", "icon": "truck"},
-        {"text": "Payments", "href": "/payments", "icon": "indian-rupee"},
         {"text": "Expenses", "href": "/expenses", "icon": "credit-card"},
-        {"text": "Coupons", "href": "/coupons", "icon": "percent"},
         {"text": "Alerts", "href": "/alerts", "icon": "bell-ring"},
     ]
     current_path = rx.State.router.page.path

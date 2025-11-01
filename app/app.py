@@ -5,7 +5,7 @@ from app.pages.dashboard import dashboard_page
 from app.pages.measurements import measurements_page
 from app.pages.install_instructions import install_instructions_page
 from app.pages.offline import offline_page
-from app.state import CustomerState, OrderState
+from app.state import CustomerState, OrderState, MaterialState
 from app.states.dashboard_state import DashboardState
 from app.states.measurement_state import MeasurementState
 from app.states.expense_state import ExpenseState
@@ -13,14 +13,6 @@ from app.states.alert_state import AlertState
 from app.pages.expenses import expenses_page
 from app.pages.alerts import alerts_page
 from app.components.pwa_install_banner import pwa_install_banner
-from app.states.coupon_state import CouponState
-from app.states.payment_state import PaymentState
-from app.states.supplier_state import SupplierState
-from app.state import MaterialState
-from app.pages.coupons import coupons_page
-from app.pages.inventory import inventory_page
-from app.pages.payments import payments_page
-from app.pages.suppliers import suppliers_page
 
 
 def index() -> rx.Component:
@@ -89,9 +81,3 @@ app.add_page(
 )
 app.add_page(alerts_page, route="/alerts", on_load=AlertState.load_page_data)
 app.add_page(expenses_page, route="/expenses", on_load=ExpenseState.get_expenses)
-app.add_page(coupons_page, route="/coupons", on_load=CouponState.get_coupons)
-app.add_page(inventory_page, route="/inventory", on_load=MaterialState.get_materials)
-app.add_page(
-    payments_page, route="/payments", on_load=PaymentState.get_all_installments
-)
-app.add_page(suppliers_page, route="/suppliers", on_load=SupplierState.get_suppliers)
